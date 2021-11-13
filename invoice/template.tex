@@ -1,0 +1,104 @@
+\documentclass{invoice}
+
+\usepackage{german}
+\usepackage{ragged2e}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{float}
+
+\def \tab {\hspace*{3ex}}
+
+\begin{document}
+
+%\hfil{\Huge\bf %VENDOR_NAME%}\hfil
+\includegraphics{Logo.png}
+
+%\vspace{-1cm}
+
+\underline{
+\begin{scriptsize}%VENDOR_NAME%, %VENDOR_ADDRESS%, %VENDOR_ZIP%\end{scriptsize}}
+
+% To Block
+\begin{minipage}{0.3\linewidth}
+%CUSTOMER_NAME%
+
+\vspace{-0.2cm}
+%CUSTOMER_ADDRESS%
+
+\vspace{-0.2cm}
+%CUSTOMER_ZIP%
+\end{minipage}
+
+\vspace{1cm}
+
+\begin{justify}
+Kunde %CUSTOMER_ID%
+\hfill
+Datum: \today
+\end{justify}
+
+\vspace{-0.3cm}
+\textbf{\large{Rechnung %INVOICE_ID%}}
+
+\vspace{1cm}
+
+\hourlyrate{%CUSTOMER_HOURLY%}
+
+\begin{invoiceTable}
+%WORK%
+%\subtotal
+\end{invoiceTable}
+
+\begin{minipage}{1.0\linewidth}
+\begin{footnotesize}
+zahlbar nach Rechnungserhalt.
+
+\vspace{-0.3cm}
+Kein Ausweis von Umsatzsteuer,
+
+\vspace{-0.3cm}
+da Kleinunternehmer gemäß § 19 USTG.
+
+Viele Dank für Ihren Auftrag und Ihr Vertrauen.
+\end{footnotesize}
+\end{minipage}
+
+\vspace*{\fill}
+
+\begin{footnotesize}
+
+\hrule
+\begin{minipage}{0.25\linewidth}
+%VENDOR_OWNER%
+
+\vspace{-0.3cm}
+%VENDOR_ADDRESS%
+
+\vspace{-0.3cm}
+%VENDOR_ZIP%
+
+\vspace{-0.3cm}
+%VENDOR_EMAIL%
+\end{minipage}
+\begin{minipage}{0.5\linewidth}
+\begin{center}
+%VENDOR_TAXID%
+\end{center}
+\end{minipage}
+\begin{minipage}{0.25\linewidth}
+%VENDOR_IBAN%
+
+\vspace{-0.3cm}
+%VENDOR_BIC%
+
+\vspace{-0.3cm}
+%VENDOR_BANK%
+
+\vspace{-0.3cm}
+\tab
+
+\end{minipage}
+
+\end{footnotesize}
+
+\end{document}
