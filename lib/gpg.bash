@@ -34,7 +34,10 @@ if [ "${enable_gpg}" = true ]; then
    # Arguments:
    #   $1 - file without the .gpg extension
    encrypt() {
-      "${GPG}" --yes -o "${1}.gpg" -e --default-recipient-self 2>/dev/null
+      #echo "Encrypting ${1}.gpg..." >&2
+      rm -f "${1}.gpg.tmp"
+      "${GPG}" --yes -o "${1}.gpg.tmp" -e --default-recipient-self #2>/dev/null
+      mv "${1}.gpg.tmp" "${1}.gpg"
    }
    
    # Decrypt a file.

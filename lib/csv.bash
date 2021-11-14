@@ -44,7 +44,7 @@ csv_read() {
 #   See: csv_read()
 csv_write() {
    mkdir -p "${datadir}" || error "failed to create ${datadir}"
-   encrypt "${datadir}/$1.csv" || error "failed to update '$1'"
+   encrypt "${datadir}/${1}.csv" || error "failed to update '$1'"
 }
 
 # Append to an encrypted CSV database.

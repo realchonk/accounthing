@@ -1,6 +1,7 @@
 - Optimize this program by caching customer and transaction databases
 - Error Checking
 - Dependency checking by install.sh
+- Adjusting the number of decimal points for Unit.
 - Autoconf like options (--prefix=PATH) for install.sh
 - Editing/Removing items can delete the whole database
 - Add fully interactive mode (-I)
