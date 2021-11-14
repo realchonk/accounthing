@@ -27,6 +27,33 @@ if [ ! -f "./invoice/Logo.png" ]; then
    exit 1
 fi
 
+failed=0
+
+# Arguments:
+#   $1 - program
+#   $2 - optional?
+check_dep() {
+   if ! which $1 >/dev/null 2>&1; then
+      echo "Warning: '$1' is not installed" >&2
+      [ "$2" = 1 ] || failed=1
+   fi
+}
+
+# Check if which is installed
+which which >/dev/null 2>&1
+if [ $? -eq 127 ]; then
+   echo "'which' is not installed" >&2
+   exit 1
+fi
+
+# Check for other dependencies
+check_dep "bash"
+check_dep "pdflatex"
+check_dep "gpg" 1
+check_dep "git" 1
+
+[ "${failed}" = 1 ] && exit 1
+
 # Set the default directories paths.
 [ -z "${bindir}" ]      && bindir="${prefix}/bin"
 [ -z "${libdir}" ]      && libdir="${prefix}/lib"
