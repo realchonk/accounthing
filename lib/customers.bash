@@ -31,33 +31,36 @@
 # Arguments:
 #   $1 - name
 #   $2 - See: csv_search()
+#   $3 - See: csv_search():$4
 # Returns & Exit Code:
 #   See: csv_search()
 cdb_search_by_name() {
-   csv_search "customers" "^[0-9]\\+\\,$1\\,.*\$" "$2"
+   csv_search "customers" "^[0-9]\\+\\,$1\\,.*\$" "$2" "$3"
 }
 
 # Search for a customer by customer ID.
 # Arguments:
 #   $1 - customer ID
 #   $2 - See: csv_search()
+#   $3 - See: csv_search():$4
 # Returns & Exit Code:
 #   See: csv_search()
 cdb_search_by_ID() {
-   csv_search "customers" "^$1\\,.*\$" "$2"
+   csv_search "customers" "^$1\\,.*\$" "$2" "$3"
 }
 
 # Search for a customer either by ID or name.
-# Arguments:
+# rguments:
 #   $1 - name/customer ID
 #   $2 - See: csv_search()
+#   $3 - See: csv_search():$4
 # Returns & Exit Code:
 #   See: csv_search()
 cdb_search() {
    if csv_is_ID "$1"; then
-      cdb_search_by_ID "$1" "$2"
+      cdb_search_by_ID "$1" "$2" "$3"
    else
-      cdb_search_by_name "$1" "$2"
+      cdb_search_by_name "$1" "$2" "$3"
    fi
 }
 
@@ -70,7 +73,9 @@ cdb_search() {
 #   0 - OK
 #   1 - No such customer
 cdb_print() {
-   cdb_do_print "$(cdb_search "$1")"
+   local entry
+   cdb_search "$1" "" entry
+   cdb_do_print "${entry}"
 }
 
 # Print information about a customer.
@@ -91,8 +96,11 @@ cdb_do_print() {
 
 # List all customers.
 cdb_list() {
-   local line
-   csv_read "customers" | while read -r line; do
+   local line cdb IFS
+   csv_read "customers" cdb
+   cdb="$(echo "${cdb}" | tr '\n' '=')"
+   IFS='='
+   for line in ${cdb}; do
       [ -n "${line}" ] && cdb_do_print "${line}"
    done
 }
@@ -104,8 +112,10 @@ cdb_list() {
 #   0 - Successfully removed.
 #   1 - No such entry
 cdb_remove() {
-   cdb_search "$1" >/dev/null || return 1
-   cdb_search "$1" "-v" | csv_write "customers"
+   local new_data
+   cdb_search "$1" "" _ >/dev/null || return 1
+   cdb_search "$1" "-v" new_data
+   csv_write "customers" "${new_data}"
 }
 
 # Calculate the total cost.
@@ -118,7 +128,9 @@ cdb_remove() {
 #   0 - OK
 #   1 - No such customer
 cdb_calc_total() {
-   local cost="$(cdb_search "$1" | cut -d',' -f5)"
+   local cost
+   cdb_search "$1" "" cost
+   cost="$(echo "${cost}" | cut -d',' -f5)"
    [ -z "${cost}" ] && return 1
    echo "scale=2; ${cost} * $2" | bc
 }
@@ -140,13 +152,13 @@ cdb_add_i() {
    done
 
    # Search for an old entry.
-   old="$(cdb_search_by_ID "${CID}")"
+   cdb_search_by_ID "${CID}" "" old
 
    # Read the name for the new customer.
    name="$(prompt "Name" "$(echo "${old}" | cut -d',' -f2)")"
 
    # If no old entry is found yet, find any entry with the same name.
-   [ -z "${old}" ] && old="$(cdb_search_by_name "${name}")"
+   [ -z "${old}" ] && cdb_search_by_name "${name}" "" old
 
    # Read the address for the new customer.
    address="$(prompt "Address" "$(echo "${old}" | cut -d',' -f3)")"
@@ -185,7 +197,7 @@ cdb_add_i() {
 #   1 - No such entry
 cdb_remove_i() {
    local entry CID name resp
-   entry="$(cdb_search "$1")"
+   cdb_search "$1" "" entry
    CID="$(echo "${entry}" | cut -d',' -f1)"
    name="$(echo "${entry}" | cut -d',' -f2)"
 

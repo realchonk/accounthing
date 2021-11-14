@@ -35,6 +35,7 @@ tdb_file="transactions_$(date +%Y)"
 # Arguments:
 #   $1 - search term
 #   $2 - See: csv_search()
+#   $3 - See: csv_search():$4
 tdb_search() {
    local year month TID CID
    local p file pattern
@@ -80,7 +81,7 @@ tdb_search() {
    else
       file="transactions_${year}"
    fi
-   csv_search "${file}" "${pattern}" "$2"
+   csv_search "${file}" "${pattern}" "$2" "$3"
 }
 
 # Interactively add a new transacton to the current database.
@@ -92,18 +93,20 @@ tdb_add_i() {
 
    # Read the transaction ID.
    while true; do
-      TID="$(prompt "Transaction ID" "$(csv_next_ID "${tdb_file}")")"
+      csv_next_ID "${tdb_file}" TID
+      TID="$(prompt "Transaction ID" "${TID}")"
       csv_is_ID "${TID}" && break
       echo "Invalid Transaction ID" >&2
    done
    
    # Find an old transaction if any
-   old="$(tdb_search "${TID}")"
-   oldname="$(cdb_search_by_ID "$(echo "${old}" | cut -d',' -f2)" | cut -d',' -f2)"
+   tdb_search "${TID}" "" old
+   cdb_search_by_ID "$(echo "${old}" | cut -d',' -f2)" "" oldname
+   oldname="$(echo "${oldname}" | cut -d',' -f2)"
 
    # Read the customer ID/name.
    while true; do
-      tmp="$(cdb_search "$(prompt "Customer" "${oldname}")")"
+      cdb_search "$(prompt "Customer" "${oldname}")" "" tmp
       if [ -z "${tmp}" ]; then
          echo "Invalid Customer" >&2
       else
@@ -156,6 +159,7 @@ tdb_add_i() {
    # Update the transaction database
    csv_append "${tdb_file}" "${TID},${CID},${date},${num},${total},${desc}"
 
+
    git_append_msg "Added new transaction with ID ${TID}"
 }
 
@@ -167,7 +171,7 @@ tdb_add_i() {
 #   1 - No such entry
 tdb_remove_i() {
    local entry TID resp
-   entries="$(tdb_search "$1")"
+   tdb_search "$1" "" entries
    TID="$(echo "${entries}" | cut -d',' -f1)"
    
    if [ -n "${TID}" ]; then
@@ -189,7 +193,9 @@ tdb_remove_i() {
 # Returns & Exit Code:
 #   See tdb_do_print()
 tdb_print() {
-   tdb_do_print $(tdb_search "$1")
+   local entries
+   tdb_search "$1" "" entry
+   tdb_do_print "${entry}"
 }
 
 # Print information about a transaction.
@@ -201,12 +207,13 @@ tdb_print() {
 #   0 - OK
 #   1 - Invalid entry
 tdb_do_print() {
-   local TID CID
+   local TID CID tmp
    [ -z "$1" ] && return 1
    TID="$(echo "$1" | cut -d',' -f1)"
    CID="$(echo $1 | cut -d',' -f2)"
    printf '\033[36m============== %s\033[0m\n' "${TID}-$(date +%Y)"
-   printf '| Customer:    %s (%s)\n' "$(cdb_search "${CID}" | cut -d',' -f2)" "${CID}"
+   cdb_search "${CID}" "" tmp
+   printf '| Customer:    %s (%s)\n' "$(echo "${tmp}" | cut -d',' -f2)" "${CID}"
    printf '| Date:        %s\n' "$(echo "$1" | cut -d',' -f3)"
    printf '| Num Hours:   %s\n' "$(echo "$1" | cut -d',' -f4)"
    printf '| Total:       %s\n' "$(echo "$1" | cut -d',' -f5)"
@@ -216,13 +223,18 @@ tdb_do_print() {
 
 # List all transactions.
 tdb_list() {
-   local file line
+   local file line IFS
    if [ -z "$1" ]; then
       file="${tdb_file}"
    else
       file="transactions_$1"
    fi
-   csv_read "${file}" | while read -r line; do
+   local tdb
+   csv_read "${file}" tdb
+   tdb="$(echo "${tdb}" | tr '\n' '=')"
+
+   IFS="="
+   for line in ${tdb}; do
       [ -n "${line}" ] && tdb_do_print "${line}"
    done
 }
@@ -234,7 +246,9 @@ tdb_list() {
 #   0 - Successfully removed.
 #   1 - No such entry
 tdb_remove() {
+   local tmp
    csv_is_ID "$1" || return 1
    tdb_search "$1" >/dev/null || return 1
-   tdb_search "$1" "-v" | csv_write "${tdb_file}"
+   tdb_search "$1" "-v" tmp
+   csv_write "${tdb_file}" "${tmp}"
 }

@@ -38,7 +38,7 @@ GPG=""
 enable_caching=true
 
 # Enable debug output (true/fals)
-enable_debug=true
+enable_debug=false
 
 # The default description of a transaction.
 tdb_default_desc="Homestuff"

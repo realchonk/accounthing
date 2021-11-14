@@ -1,4 +1,3 @@
-- Optimize this program by caching customer and transaction databases
 - Error Checking
 - Dependency checking by install.sh
 - Adjusting the number of decimal points for Unit.

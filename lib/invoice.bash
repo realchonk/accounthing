@@ -123,8 +123,8 @@ next_invoice() {
 #   LaTeX invoice
 generate_invoice() {
    local customer transactions
-   customer="$(cdb_search "$1")"
-   transactions="$(tdb_search "$2:$1")"
+   cdb_search "$1" "" customer
+   tdb_search "$2:$1" "" transactions
 
    [ -z "${customer}" ] && echo "$1: No such customer" >&2 && exit 1
    [ -z "${transactions}" ] && echo "$2: Couldn't find any transactions" >&2 && exit 1
@@ -150,9 +150,13 @@ generate_invoice() {
 # Arguments:
 #   $1 - month
 generate_all_invoices() {
-   local c outfile
+   local c outfile tdb
    mkdir -p "${invoice_output_dir}" || exit 1
-   for c in $(tdb_search "$1" | cut -d',' -f2 | sort | uniq); do
+
+   tdb_search "$1" "" tdb
+   tdb="$(echo "${tdb}" | cut -d',' -f2 | sort | uniq)"
+
+   for c in ${tdb}; do
       outfile="${invoice_output_dir}/invoice_${c}_$(date +"%Y-%m").pdf"
       generate_invoice "$c"
       [ $? -ne 0 ] && echo "${outfile}: Failed" >&2 && return 1

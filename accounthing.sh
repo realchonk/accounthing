@@ -105,7 +105,8 @@ case "$1" in
    ret="$?"
    ;;
 -pt)
-   csv_read "${tdb_file}"
+   csv_read "${tdb_file}" data
+   echo "${data}"
    ret="$?"
    ;;
 -ac)

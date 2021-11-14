@@ -34,7 +34,8 @@ if [ "${enable_gpg}" = true ]; then
    # Arguments:
    #   $1 - file without the .gpg extension
    encrypt() {
-      #echo "Encrypting ${1}.gpg..." >&2
+      debug "Encrypting ${1}.gpg..."
+      # cat; return
       rm -f "${1}.gpg.tmp"
       "${GPG}" --yes -o "${1}.gpg.tmp" -e --default-recipient-self #2>/dev/null
       mv "${1}.gpg.tmp" "${1}.gpg"
@@ -43,8 +44,15 @@ if [ "${enable_gpg}" = true ]; then
    # Decrypt a file.
    # Arguments:
    #   $1 - file to decrypt without the .gpg extension.
+   #   $2 - out
    decrypt() {
-      [ -e "${1}.gpg" ] && "${GPG}" -d "${1}.gpg" 2>/dev/null
+      local gpg_data
+
+      [ ${#2} -eq 0 ] && error "\$2 is undefined"
+
+      gpg_data="$("${GPG}" -d "${1}.gpg" 2>/dev/null)"
+
+      eval "${2}='${gpg_data}'"
    }
 
 else
@@ -53,6 +61,7 @@ else
    }
 
    decrypt() {
-      cat "$1"
+      [ ${#2} -eq 0 ] && error "\$2 is undefined"
+      eval "${2}='$(cat "$1")'"
    }
 fi

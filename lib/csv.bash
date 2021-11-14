@@ -32,28 +32,70 @@ csv_is_ID() {
    echo "$1" | grep -q '^[0-9]\{3\}$'
 }
 
+if [ "${enable_caching}" = true ]; then
 
-# Read an encrypted CSV database.
-# Arguments:
-#   $1 - name of the database
-csv_read() {
-   decrypt "${datadir}/${1}.csv"
-}
+   declare -A csv_cache
 
-# Write an encrypted CSV database.
-# Arguments:
-#   See: csv_read()
-csv_write() {
-   mkdir -p "${datadir}" || error "failed to create ${datadir}"
-   encrypt "${datadir}/${1}.csv" || error "failed to update '$1'"
-}
+   # Read an encrypted CSV database.
+   # Arguments:
+   #   $1 - name of the database
+   #   $2 - variable to store the data in
+   csv_read() {
+      local csv_data
+      if [ "${csv_cache[$1]}" ]; then
+         debug "Cache Hit ($1)"
+         csv_data="${csv_cache[$1]}"
+      else
+         debug "Cache Miss ($1)"
+         decrypt "${datadir}/${1}.csv" csv_data
+         csv_cache[$1]="${csv_data}"
+      fi
+
+      [ ${#2} -ne 0 ] && eval "${2}='${csv_data}'" || echo "${csv_data}"
+   }
+   
+   # Write an encrypted CSV database.
+   # Arguments:
+   #   $1 - name of the database
+   #   $2 - new data
+   csv_write() {
+      mkdir -p "${datadir}" || error "failed to create ${datadir}"
+      echo "$2" | encrypt "${datadir}/${1}.csv" || error "failed to update '$1'"
+      csv_cache[$1]="$2"
+   }
+
+else
+
+   # Read an encrypted CSV database.
+   # Arguments:
+   #   $1 - name of the database
+   #   $2 - variable to store the data in
+   csv_read() {
+      local csv_data
+      decrypt "${datadir}/${1}.csv" csv_data
+      [ ${#2} -ne 0 ] && eval "${2}='${csv_data}'" || echo "${csv_data}"
+   }
+   
+   # Write an encrypted CSV database.
+   # Arguments:
+   #   $1 - name of the database
+   #   $2 - new data
+   csv_write() {
+      mkdir -p "${datadir}" || error "failed to create ${datadir}"
+      echo "$2" | encrypt "${datadir}/${1}.csv" || error "failed to update '$1'"
+   }
+
+fi
 
 # Append to an encrypted CSV database.
 # Arguments:
 #   $1 - See: csv_read()
 #   $2 - text to be appended
 csv_append() {
-   csv_read "$1" | { cat -; echo "$2"; } | csv_write "$1"
+   local append_data
+   csv_read "$1" append_data
+   append_data="$(printf "%s\n%s" "${append_data}" "$2")"
+   csv_write "$1" "${append_data}"
 }
 
 # Search for an entry in a CSV database.
@@ -61,13 +103,14 @@ csv_append() {
 #   $1 - See: csv_read()
 #   $2 - search regex
 #   $3 - '-v' (optional)
+#   $4 - out
 # Returns:
 #   The corresponding entry in the database in CSV format.
 # Exit Code:
 #   0 - Entry found
 #   1 - No such entry
 csv_search() {
-   local arg
+   local arg db csv_search_results
 
    if [ -n "$3" ]; then
       arg="$3"
@@ -75,13 +118,24 @@ csv_search() {
       arg="--"
    fi
 
-   csv_read "$1" | grep "${arg}" "$2"
+   csv_read "$1" db
+   csv_search_results="$(echo "${db}" | grep "${arg}" "$2")"
+   [ ${#4} -ne 0 ] && eval "${4}='${csv_search_results}'" || echo "${csv_search_results}"
 }
 
 # Search for the next available ID.
 # IDs are always 3 digits long.
+# Arguments:
+#   $1 - file
+#   $2 - out
 csv_next_ID() {
-   local ID="$(csv_read "$1" | cut -d',' -f1 | sort | tail -n1)"
-   [ -z "${ID}" ] && echo "001" && return
-   increment_ID "${ID}" 3
+   local csv
+   csv_read "$1" csv
+   local ID="$(echo "${csv}" | cut -d',' -f1 | sort | tail -n1)"
+   if [ -z "${ID}" ]; then
+      ID="001"
+   else
+      ID="$(increment_ID "${ID}" 3)"
+   fi
+   [ ${#2} -ne 0 ] && eval "${2}='${ID}'" || echo "${ID}"
 }
