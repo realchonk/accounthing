@@ -36,11 +36,11 @@ csv_is_ID() {
 # Arguments:
 #   $1 - name of the database
 csv_read() {
-   local path="${datadir}/$1.csv.gpg"
+   local path="${datadir}/$1.csv"
 
    # If it exists, read it
    if [ -e "${path}" ]; then
-      decrypt <"${path}"
+      decrypt "${path}"
    fi
 
 }
@@ -50,7 +50,7 @@ csv_read() {
 #   See: csv_read()
 csv_write() {
    mkdir -p "${datadir}" || error "failed to create ${datadir}"
-   encrypt "${datadir}/$1.csv.gpg" || error "failed to update '$1'"
+   encrypt "${datadir}/$1.csv" || error "failed to update '$1'"
 }
 
 # Append to an encrypted CSV database.

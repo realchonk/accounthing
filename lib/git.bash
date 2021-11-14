@@ -24,6 +24,11 @@ git_need_commit=0
 
 if [ "${enable_git}" = true ]; then
 
+   if [ -z "${GIT}" ]; then
+      GIT="$(which git)"
+      [ -z "${GIT}" ] && error "git is not installed."
+   fi
+
    # Commits to the git repo.
    git_commit() {
       [ "${git_need_commit}" = 0 ] && return
@@ -32,11 +37,11 @@ if [ "${enable_git}" = true ]; then
 
       # If there is no git repo
       if [ ! -d .git ]; then
-         git init -q || return 1
+         "${GIT}" init -q || return 1
       fi
 
-      git add . || return 1
-      echo "${git_commit_msg}" | git commit -qF - || return 1
+      "${GIT}" add . || return 1
+      echo "${git_commit_msg}" | "${GIT}" commit -qF - || return 1
       popd >/dev/null
    }
 

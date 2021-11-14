@@ -19,6 +19,18 @@ enable_git=true
 # Header of the commit message.
 git_commit_msg="Automatic Update"
 
+# Path to the git binary. (Can be safely left empty)
+GIT=""
+
+
+## GNU Privacy Guard (gpg) Integration
+
+# Enable encryption of the databases with gpg (true/false).
+enable_gpg=true
+
+# Path to the gpg binary. (Can be safely left empty)
+GPG=""
+
 
 ## Other options
 
