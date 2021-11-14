@@ -36,13 +36,7 @@ csv_is_ID() {
 # Arguments:
 #   $1 - name of the database
 csv_read() {
-   local path="${datadir}/$1.csv"
-
-   # If it exists, read it
-   if [ -e "${path}" ]; then
-      decrypt "${path}"
-   fi
-
+   decrypt "${datadir}/${1}.csv"
 }
 
 # Write an encrypted CSV database.

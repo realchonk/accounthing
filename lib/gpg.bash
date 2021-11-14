@@ -41,7 +41,7 @@ if [ "${enable_gpg}" = true ]; then
    # Arguments:
    #   $1 - file to decrypt without the .gpg extension.
    decrypt() {
-      "${GPG}" -d "${1}.gpg" 2>/dev/null
+      [ -e "${1}.gpg" ] && ${GPG}" -d "${1}.gpg" 2>/dev/null
    }
 
 else
