@@ -19,18 +19,14 @@
 # Dependencies:
 # - error.bash
 
-# This is an optional module
-ENABLE_GIT=1
-
-git_commit_msg="Automatic Update"
+# git_commit_msg is now defined in the config
 git_need_commit=0
 
-if [ "${ENABLE_GIT}" = 1 ]; then
+if [ "${enable_git}" = true ]; then
 
    # Commits to the git repo.
    git_commit() {
       [ "${git_need_commit}" = 0 ] && return
-      [ -z "${commit_msg}" ] && commit_msg="Update"
 
       pushd "${datadir}" >/dev/null
 

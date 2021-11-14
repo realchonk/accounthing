@@ -28,7 +28,7 @@
 # - Total            (eg. 67.50)
 # - Description      (eg. Haushaltshilfe)
 
-tdb_default_desc="Haushaltshilfe"
+# tdb_default_desc is now defined in the config
 tdb_file="transactions_$(date +%Y)"
 
 # Search for one or more transactions.
