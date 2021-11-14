@@ -203,17 +203,15 @@ tdb_print() {
 tdb_do_print() {
    local TID CID
    [ -z "$1" ] && return 1
-   for e in $@; do
-      TID="$(echo "$e" | cut -d',' -f1)"
-      CID="$(echo $e | cut -d',' -f2)"
-      printf '\033[36m============== %s\033[0m\n' "${TID}-$(date +%Y)"
-      printf '| Customer:    %s (%s)\n' "$(cdb_search "${CID}" | cut -d',' -f2)" "${CID}"
-      printf '| Date:        %s\n' "$(echo "$e" | cut -d',' -f3)"
-      printf '| Num Hours:   %s\n' "$(echo "$e" | cut -d',' -f4)"
-      printf '| Total:       %s\n' "$(echo "$e" | cut -d',' -f5)"
-      printf '| Description: %s\n' "$(echo "$e" | cut -d',' -f6)"
-      echo
-   done
+   TID="$(echo "$1" | cut -d',' -f1)"
+   CID="$(echo $1 | cut -d',' -f2)"
+   printf '\033[36m============== %s\033[0m\n' "${TID}-$(date +%Y)"
+   printf '| Customer:    %s (%s)\n' "$(cdb_search "${CID}" | cut -d',' -f2)" "${CID}"
+   printf '| Date:        %s\n' "$(echo "$1" | cut -d',' -f3)"
+   printf '| Num Hours:   %s\n' "$(echo "$1" | cut -d',' -f4)"
+   printf '| Total:       %s\n' "$(echo "$1" | cut -d',' -f5)"
+   printf '| Description: %s\n' "$(echo "$1" | cut -d',' -f6)"
+   echo
 }
 
 # List all transactions.

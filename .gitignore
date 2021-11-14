@@ -3,3 +3,4 @@
 *.pdf
 db*
 invoice/next_invoice
+test*
