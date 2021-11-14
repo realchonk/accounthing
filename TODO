@@ -1,5 +1,6 @@
 - Error Checking
-- Add option to disable encryption
+- Dependency checking by install.sh
+- Autoconf like options (--prefix=PATH) for install.sh
 - Removing items is sometimes buggy
 - Add fully interactive mode (-i)
 - Add graphical wrapper
