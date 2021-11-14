@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #  Copyright (C) 2021 Benjamin Stürz
 #
 #  This file is part of the accounthing project.
@@ -30,6 +30,9 @@ prog="$(basename "$0")"
 # shellcheck source=config.sh
 . "${conffile}"
 
+# shellcheck source=lib/csv.bash
+. "${libdir}/csv.bash"
+
 # shellcheck source=lib/git.bash
 . "${libdir}/git.bash"
 
@@ -44,9 +47,6 @@ prog="$(basename "$0")"
 
 # shellcheck source=lib/util.bash
 . "${libdir}/util.bash"
-
-# shellcheck source=lib/csv.bash
-. "${libdir}/csv.bash"
 
 # shellcheck source=lib/transactions.bash
 . "${libdir}/transactions.bash"

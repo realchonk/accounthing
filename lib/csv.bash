@@ -32,6 +32,7 @@ csv_is_ID() {
    echo "$1" | grep -q '^[0-9]\{3\}$'
 }
 
+
 # Read an encrypted CSV database.
 # Arguments:
 #   $1 - name of the database

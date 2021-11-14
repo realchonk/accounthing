@@ -3,6 +3,6 @@
 - Dependency checking by install.sh
 - Adjusting the number of decimal points for Unit.
 - Autoconf like options (--prefix=PATH) for install.sh
-- Editing/Removing items can delete the whole database
+- Editing/Removing items could delete the whole database
 - Add fully interactive mode (-I)
 - Add graphical wrapper

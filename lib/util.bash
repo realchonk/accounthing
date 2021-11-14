@@ -73,3 +73,15 @@ increment_ID() {
    ID="$(echo "$1" | sed 's/0*//')"
    printf "%0*d" "$2" "$((ID + 1))"
 }
+
+if [ "${enable_debug}" = true ]; then
+   # Print a message to standard error
+   debug() {
+      echo "$@" >&2
+   }
+else
+   debug() {
+      :
+   }
+fi
+
