@@ -1,5 +1,7 @@
 # Accounting software for Chads
 
+## [Example Invoice](./invoice_example.pdf)
+
 ## Description
 This project was created for a relative of mine,
 therefore everything is made for the German accounting system,
@@ -66,7 +68,9 @@ Before the installation, it is named `config.sh`,
 after the installation, it is named `accounthing.conf` and typically resides in the `${prefix}/etc` directory.
 
 ## Installation
-Issue `./install.sh -h` for installation instructions.
+You don't have to install this project,
+to use it, but if you want to
+issue `./install.sh -h` for installation instructions.
 
 ### Dependencies
 - bash
