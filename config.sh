@@ -35,6 +35,8 @@ GPG=""
 ## Other options
 
 # Enable caching of files (true/false)
+# This is still somewhat experimental,
+# but causes the program to run a lot fater.
 enable_caching=true
 
 # Enable debug output (true/fals)
