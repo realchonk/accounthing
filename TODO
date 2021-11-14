@@ -1,6 +1,7 @@
+- Optimize this program by caching customer and transaction databases
 - Error Checking
 - Dependency checking by install.sh
 - Autoconf like options (--prefix=PATH) for install.sh
 - Removing items is sometimes buggy
-- Add fully interactive mode (-i)
+- Add fully interactive mode (-I)
 - Add graphical wrapper
