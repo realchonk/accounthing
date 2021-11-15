@@ -34,8 +34,6 @@ where year matches the year of the transaction (`YYYY`).
 
 Both files are typically stored in the `${prefix}/db` directory, where `${prefix}` is the path `accounthing.sh` and supporting files are located.
 
-You can dump the contents of the customer database with `accounthing -pc` and the transaction database with `accounthing -pt`.
-
 By default, versioning of the databases is enabled using Git. GPG encryption and Git version control can be configured in the config file, `${prefix}/config.sh`.
 
 ## Usage
@@ -70,6 +68,17 @@ By default, a logo (`${prefix}/invoice/Logo.png`) is used at the top of the invo
 The template file `Logo.xcf` is provided that should be edited with GIMP.
 You should only change the size of the logo if you intend to use a different paper format than DIN A4.
 Feel free to modify these files to fit your need.
+
+### Dump Database Contents
+To dump the contents of the customer database:
+```
+accounthing -pc
+```
+
+To dump the contents of the transactions database (for the current year):
+```
+accounthing -pt
+```
 
 ## Configuration
 You can change some parameters in the config file.
