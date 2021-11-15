@@ -1,11 +1,11 @@
 # Accounting software for Chads
 
 ## Description
+`accounthing.sh` is a command line accounting system that keeps tracks of customer and transactions, with the ability to generate invoices.
+
 This project was created for a relative of mine,
 therefore everything is made for the German accounting system,
 but you could modify this project to fit your local needs.
-
-There are customers and transactions, where a transaction corresponds to an entry in the resulting invoice.
 
 Click [here](./invoice_example.pdf) to see an example invoice.
 
