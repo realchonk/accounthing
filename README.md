@@ -36,6 +36,9 @@ Also by default versioning of the databases is enabled. Both options can be chan
 
 ## Usage
 
+### Interactive Mode
+There is an (currently incomplete) interactive mode accessible by running `accounthing -I`.
+
 ### Managing Customers
 New customers can be created with `accounthing -ac`.
 Customers can also be similarly edited, by providing the customer ID.
@@ -76,6 +79,7 @@ issue `./install.sh -h` for installation instructions.
 - bash
 - gpg (optional)
 - git (optional)
+- dialog (optional, or interactive mode)
 - pdflatex and LaTeX modules (`texlive-most` on Arch Linux)
 
 ## Troubleshooting
