@@ -35,36 +35,67 @@ where year matches the year of the transaction (`YYYY`).
 Both files are typically stored in the `${prefix}/db` directory, where `${prefix}` is the path `accounthing.sh` and supporting files are located.
 
 ## Usage
-
-### Interactive Mode
-There is an (currently incomplete) interactive mode accessible by running `accounthing -I`.
-
 ### Managing Customers
-New customers can be created with `accounthing -ac`.
-Customers can also be similarly edited, by providing the customer ID.
-A list of customers can be optained with the `accounthing -lc`
-You can also search (`accounthing -sc term`) and remove (`accounthing -rc ID/name`) customers.
+To create a new customer:
+```
+accounthing -ac
+```
+
+To search a customer:
+```
+accounthing -sc name/ID
+```
+
+To remove a customer:
+```
+accounthing -rc name/ID
+```
+
+To list all customers:
+```
+accounthing -lc
+```
 
 ### Managing Transactions
-The options for managing transactions are the same as managing customer,
-but instead of `c`, you'll use `t`.
-For example, to create a transaction you type `accounthing -at`.
-You can also add transactions, for example from an external script with `accounthing -atc CID date num [total] description`,
-with CID being the customer ID, which can be found with `accounthing -lc`.
-The only exception is listing transactions, for which you'll use `accounthing -lt [year]`.
-If no year is specified, the current year is used.
-Currently there is no option to list transaction of multiple years.
+To create a new transaction:
+```
+accounthing -at
+```
+
+To create a new transaction directly from the command line:
+```
+accounthing -atc CID date num [total] description
+```
+Where `CID` is the customer ID, and the `total` amount is optional.
+
+To list all transactions:
+```
+accounthing -lt [year]
+```
+If no `year` is provided, the current year is used.
+
+*Currently there is no option to list transactions of multiple years.*
 
 ### Creating Invoices
-You can generate all invoices for the current month with `accounthing -ia`.
-If you want to generate invoices for a different month, for example the July of 2021,
-run `accounthing -ia 2021-07`.
-You can also create an invoice for a single customer with `accounthing -i customer month`. 
-Invoices are generated from a `template.tex` file which uses a customized `invoice.cls` class.
-The template is written in LaTeX and the resulting invoice is a PDF.
-By default, a logo (`${prefix}/invoice/Logo.png`) is used at the top of the invoice.
-The template file `Logo.xcf` is provided that should be edited with GIMP.
-You should only change the size of the logo if you intend to use a different paper format than DIN A4.
+To generate all invoices for a month:
+```
+accounthing -ia [month]
+```
+Where `month` is in the following format: `YYYY-MM` (such as `2021-07` for July 2021). If no `month` is provided, the current month is used.
+
+To generate an invoice for a single customer:
+```
+accounthing -i customer month
+```
+Where `customer` can be a name or an ID and `month` is in the following format: `YYYY-MM` (such as `2021-07` for July 2021).
+
+#### Invoice generation
+The files used to generate invoices are found under `${prefix]/invoice/`.
+
+Invoices are generated from a `template.tex` file which uses a customized `invoice.cls` class. The template is written in LaTeX and the resulting invoice is a PDF.
+
+By default, a logo `Logo.png` is used at the top of the invoice. The template file `Logo.xcf` is provided that should be edited with GIMP. You should only change the size of the logo if you intend to use a different paper format than DIN A4.
+
 Feel free to modify these files to fit your need.
 
 ### Dump Database Contents
@@ -76,6 +107,11 @@ accounthing -pc
 To dump the contents of the transactions database (for the current year):
 ```
 accounthing -pt
+```
+### Interactive Mode
+There is an (currently incomplete) interactive mode accessible by running:
+```
+accounthing -I
 ```
 
 ## Configuration
