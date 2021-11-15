@@ -107,14 +107,15 @@ int_customers() {
          "---" "--------------"                          \
          "${dialog_args[@]}"                             \
          "---" "--------------"                          \
+         "Back" "Go back to the main menu."              \
          "Exit" "Close this program."                    \
 
       case "${ret_val}" in
       $DIALOG_CANCEL)
-         return
+         return 0
          ;;
       $DIALOG_ESC)
-         return
+         return 1
          ;;
       esac
 
@@ -124,6 +125,9 @@ int_customers() {
          ;;
       ---)
          continue
+         ;;
+      Back)
+         return 0
          ;;
       Exit)
          return 1
@@ -153,10 +157,10 @@ int_manage_customer() {
       
       case "${ret_val}" in
       $DIALOG_CANCEL)
-         return
+         return 0
          ;;
       $DIALOG_ESC)
-         return
+         return 1
          ;;
       esac
 
@@ -243,7 +247,7 @@ int_edit_customer() {
 
       case "${ret_val}" in
       $DIALOG_CANCEL)
-         return
+         return 0
          ;;
       $DIALOG_ESC)
          return 1
