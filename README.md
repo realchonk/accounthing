@@ -49,6 +49,8 @@ You can also search (`accounthing -sc term`) and remove (`accounthing -rc ID/nam
 The options for managing transactions are the same as managing customer,
 but instead of `c`, you'll use `t`.
 For example, to create a transaction you type `accounthing -at`.
+You can also add transactions, for example from an external script with `accounthing -atc CID date num [total] description`,
+where CID is the customer ID, which can be found with `accounthing -lc`.
 The only exception is listing transactions, for which you'll use `accounthing -lt [year]`.
 If no year is specified, the current year is used.
 Currently there is no option to list transaction of multiple years.
