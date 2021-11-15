@@ -1,13 +1,13 @@
 # Accounting software for Chads
 
-## [Example Invoice](./invoice_example.pdf)
-
 ## Description
 This project was created for a relative of mine,
 therefore everything is made for the German accounting system,
 but you could modify this project to fit your local needs.
-There are customers and transactions.
-A transaction corresponds to an entry in the resulting invoice.
+
+There are customers and transactions, where a transaction corresponds to an entry in the resulting invoice.
+
+Click [here](./invoice_example.pdf) to see an example invoice.
 
 #### Each customer has the following information:
 - A unique customer ID
