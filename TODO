@@ -1,3 +1,6 @@
+- Remove `total` and add `price` instead to transactions
+- Make command-line options intuitive
+- Man page
 - More Error Checking
 - Adjusting the number of decimal points for Unit.
 - Autoconf-like options (--prefix=PATH) for install.sh
