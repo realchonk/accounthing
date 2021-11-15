@@ -123,7 +123,11 @@ case "$1" in
    ret="$?"
    ;;
 -atc)
-   tdb_add_direct "$2" "$3" "$4" "$5" "$6"
+   if [ "$5" ] && [ ! "$6" ]; then
+      tdb_add_direct "$2" "$3" "$4" "" "$5"
+   else
+      tdb_add_direct "$2" "$3" "$4" "$5" "$6"
+   fi
    ret="$?"
    ;;
 -rc)
