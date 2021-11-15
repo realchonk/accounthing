@@ -34,8 +34,6 @@ where year matches the year of the transaction (`YYYY`).
 
 Both files are typically stored in the `${prefix}/db` directory, where `${prefix}` is the path `accounthing.sh` and supporting files are located.
 
-By default, versioning of the databases is enabled using Git. GPG encryption and Git version control can be configured in the config file, `${prefix}/config.sh`.
-
 ## Usage
 
 ### Interactive Mode
@@ -81,9 +79,13 @@ accounthing -pt
 ```
 
 ## Configuration
-You can change some parameters in the config file.
-Before the installation, it is named `config.sh`,
-after the installation, it is named `accounthing.conf` and typically resides in the `${prefix}/etc` directory.
+The default configuration path is `${prefix}/etc/${conffile}`, where `${conffile}` is `config.sh` and later renamed to `accounthing.conf`.
+
+You can customize the configuration of `accounthing.sh`, including, but not limited to:
+
+- Git version control integration
+- GPG encryption
+- Accounting system default information
 
 ## Installation
 You don't have to install this project,
