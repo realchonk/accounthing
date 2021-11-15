@@ -49,6 +49,7 @@ To create a new customer:
 ```
 accounthing -ac
 ```
+*This same option can be used to edit an existing customer: execute `accounthing.sh -ac` and provide an existing CID, which will allow you to change any values when prompted by the interactive tool.*
 
 To search a customer:
 ```
