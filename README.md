@@ -34,6 +34,15 @@ where year matches the year of the transaction (`YYYY`).
 
 Both files are typically stored in the `${prefix}/db` directory, where `${prefix}` is the path `accounthing.sh` and supporting files are located.
 
+### Invoice generation
+The files used to generate invoices are found under `${prefix]/invoice/`.
+
+Invoices are generated from a `template.tex` file which uses a customized `invoice.cls` class. The template is written in LaTeX and the resulting invoice is a PDF.
+
+By default, a logo `Logo.png` is used at the top of the invoice. The template file `Logo.xcf` is provided that should be edited with GIMP. You should only change the size of the logo if you intend to use a different paper format than DIN A4.
+
+Feel free to modify these files to fit your need.
+
 ## Usage
 ### Managing Customers
 To create a new customer:
@@ -88,15 +97,6 @@ To generate an invoice for a single customer:
 accounthing -i customer month
 ```
 Where `customer` can be a name or an ID and `month` is in the following format: `YYYY-MM` (such as `2021-07` for July 2021).
-
-#### Invoice generation
-The files used to generate invoices are found under `${prefix]/invoice/`.
-
-Invoices are generated from a `template.tex` file which uses a customized `invoice.cls` class. The template is written in LaTeX and the resulting invoice is a PDF.
-
-By default, a logo `Logo.png` is used at the top of the invoice. The template file `Logo.xcf` is provided that should be edited with GIMP. You should only change the size of the logo if you intend to use a different paper format than DIN A4.
-
-Feel free to modify these files to fit your need.
 
 ### Dump Database Contents
 To dump the contents of the customer database:
