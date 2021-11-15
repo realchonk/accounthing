@@ -79,7 +79,7 @@ issue `./install.sh -h` for installation instructions.
 - bash
 - gpg (optional)
 - git (optional)
-- dialog (optional, or interactive mode)
+- dialog (optional, only for interactive mode)
 - pdflatex and LaTeX modules (`texlive-most` on Arch Linux)
 
 ## Troubleshooting
