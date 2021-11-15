@@ -16,9 +16,6 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Read/Write encrypted CSV databases
-# Dependencies:
-# - error
-# - gpg
 
 
 # Check if $datadir is set.
@@ -59,9 +56,11 @@ if [ "${enable_caching}" = true ]; then
    #   $1 - name of the database
    #   $2 - new data
    csv_write() {
+      local tmp_data
+      tmp_data="$(echo "$2" | sed '/^\s*$/d')"
       mkdir -p "${datadir}" || error "failed to create ${datadir}"
-      echo "$2" | encrypt "${datadir}/${1}.csv" || error "failed to update '$1'"
-      csv_cache[$1]="$2"
+      echo "${tmp_data}" | encrypt "${datadir}/${1}.csv" || error "failed to update '$1'"
+      csv_cache[$1]="${tmp_data}"
    }
 
 else
@@ -138,4 +137,16 @@ csv_next_ID() {
       ID="$(increment_ID "${ID}" 3)"
    fi
    [ ${#2} -ne 0 ] && eval "${2}='${ID}'" || echo "${ID}"
+}
+
+
+# Get an entry from a CSV-line
+# Arguments:
+#   $1 - CSV entry
+#   $2 - num
+#   $3 - out
+csv_get() {
+   local tmp
+   tmp="$(echo "$1" | cut -d',' -f"$2")"
+   [ "${#3}" -ne 0 ] && eval "${3}='${tmp}'" || echo "${tmp}"
 }

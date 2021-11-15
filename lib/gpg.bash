@@ -16,9 +16,8 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Encryption/Decryption module
-# Dependencies:
-# - error.sh
-
+# External Dependencies:
+# - gpg
 
 if [ "${enable_gpg}" = true ]; then
    

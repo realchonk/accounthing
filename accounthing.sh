@@ -54,6 +54,9 @@ prog="$(basename "$0")"
 # shellcheck source=lib/invoice.bash
 . "${libdir}/invoice.bash"
 
+# shellcheck source=lib/interactive.bash
+. "${libdir}/interactive.bash"
+
 
 [ $# -lt 1 ] && echo "Usage: ${prog} -h" >&2 && exit 1
 
@@ -140,6 +143,11 @@ case "$1" in
       generate_all_invoices "$2"
       ret="$?"
    fi
+   ;;
+-I)
+   int_main
+   ret="$?"
+   #clear
    ;;
 *)
    echo "${prog}: invalid option '$1'" >&2

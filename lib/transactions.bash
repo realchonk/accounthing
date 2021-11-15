@@ -16,9 +16,6 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Transactions Database module
-# Dependencies:
-# - csv
-# - util
 
 # Format:
 # - Transaction ID   (eg. 001)
@@ -27,6 +24,13 @@
 # - Num              (eg. 4.5)
 # - Total            (eg. 67.50)
 # - Description      (eg. Haushaltshilfe)
+
+TRANS_ID=1
+TRANS_CID=2
+TRANS_DATE=3
+TRANS_NUM=4
+TRANS_TOTAL=5
+TRANS_DESC=6
 
 # tdb_default_desc is now defined in the config
 tdb_file="transactions_$(date +%Y)"
@@ -101,8 +105,8 @@ tdb_add_i() {
    
    # Find an old transaction if any
    tdb_search "${TID}" "" old
-   cdb_search_by_ID "$(echo "${old}" | cut -d',' -f2)" "" oldname
-   oldname="$(echo "${oldname}" | cut -d',' -f2)"
+   cdb_search_by_ID "$(csv_get "${old}" $TRANS_CID)" "" tmp
+   csv_get "${tmp}" $CUSTOMER_NAME oldname
 
    # Read the customer ID/name.
    while true; do
@@ -110,7 +114,7 @@ tdb_add_i() {
       if [ -z "${tmp}" ]; then
          echo "Invalid Customer" >&2
       else
-         CID="$(echo "${tmp}" | cut -d',' -f1)"
+         csv_get "${tmp}" $CUSTOMER_ID CID
          break
       fi
    done
@@ -118,7 +122,7 @@ tdb_add_i() {
    # Read the date.
    while true; do
       if [ -n "${old}" ]; then
-         tmp="$(echo "${old}" | cut -d',' -f3)"
+         csv_get "${old}" $TRANS_DATE tmp
       else
          tmp="$(date +%F)"
       fi
@@ -128,7 +132,7 @@ tdb_add_i() {
    done
 
    # Read the description
-   [ -n "${old}" ] && tmp="$(echo "${old}" | cut -d',' -f6)"
+   [ -n "${old}" ] && csv_get "${old}" $TRANS_DESC tmp
    [ -z "${desc}" ] && tmp="${tdb_default_desc}"
    while true; do
       desc="$(prompt "Description" "${tmp}")"
@@ -138,7 +142,7 @@ tdb_add_i() {
 
    # Read the number of hours.
    while true; do
-      num="$(prompt "Number of hours" "$(echo "${old}" | cut -d',' -f4)")"
+      num="$(prompt "Number of hours" "$(csv_get "${old}" $TRANS_NUM)")"
       is_number "${num}" && break
       echo "Invalid Number" >&2
    done
@@ -209,15 +213,15 @@ tdb_print() {
 tdb_do_print() {
    local TID CID tmp
    [ -z "$1" ] && return 1
-   TID="$(echo "$1" | cut -d',' -f1)"
-   CID="$(echo $1 | cut -d',' -f2)"
+   csv_get "$1" $TRANS_ID TID
+   csv_get "$1" $TRANS_CID CID
    printf '\033[36m============== %s\033[0m\n' "${TID}-$(date +%Y)"
    cdb_search "${CID}" "" tmp
-   printf '| Customer:    %s (%s)\n' "$(echo "${tmp}" | cut -d',' -f2)" "${CID}"
-   printf '| Date:        %s\n' "$(echo "$1" | cut -d',' -f3)"
-   printf '| Num Hours:   %s\n' "$(echo "$1" | cut -d',' -f4)"
-   printf '| Total:       %s\n' "$(echo "$1" | cut -d',' -f5)"
-   printf '| Description: %s\n' "$(echo "$1" | cut -d',' -f6)"
+   printf '| Customer:    %s (%s)\n' "$(csv_get "${tmp}" $CUSTOMER_NAME)" "${CID}"
+   printf '| Date:        %s\n' "$(csv_get "$1" $TRANS_DATE)"
+   printf '| Num Hours:   %s\n' "$(csv_get "$1" $TRANS_NUM)"
+   printf '| Total:       %s\n' "$(csv_get "$1" $TRANS_TOTAL)"
+   printf '| Description: %s\n' "$(csv_get "$1" $TRANS_DESC)"
    echo
 }
 

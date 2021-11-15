@@ -64,6 +64,16 @@ is_date() {
    return 0
 }
 
+# Checks if $1 is a valid ZIP+City
+is_zip() {
+   echo "$1" | grep -q '^[0-9]\{5\}\s\+[a-zA-Z]\+$'
+}
+
+# Checks if $1 is a valid cost
+is_cost() {
+   echo "$1" | grep -q '^[0-9]\+\(\.[0-9]\+\)\?$'
+}
+
 # Properly increment an ID.
 # Arguments:
 #   $1 - ID

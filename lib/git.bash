@@ -16,8 +16,8 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Git versioning support
-# Dependencies:
-# - error.bash
+# External Dependencies:
+# - git
 
 # git_commit_msg is now defined in the config
 git_need_commit=0

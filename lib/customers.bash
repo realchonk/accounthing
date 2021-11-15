@@ -16,9 +16,6 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Customer Database module
-# Dependencies:
-# - csv
-# - util
 
 # Format:
 # - Customer ID   (eg. 001)
@@ -26,6 +23,12 @@
 # - Address
 # - ZIP + City
 # - Hourly Cost   (eg. 15.00)
+
+CUSTOMER_ID=1
+CUSTOMER_NAME=2
+CUSTOMER_ADDRESS=3
+CUSTOMER_ZIP=4
+CUSTOMER_HOURLY=5
 
 # Search for a customer by name.
 # Arguments:
@@ -85,12 +88,11 @@ cdb_print() {
 #   String to be printed to standard output.
 cdb_do_print() {
    [ -z "$1" ] && return 1
-   ID="$(echo "$1" | cut -d',' -f1)"
-   printf '\033[33m============== %s\033[0m\n' "$(echo "$1" | cut -d',' -f2)"
-   printf "| ID:          %s\n" "$(echo "$1" | cut -d',' -f1)"
-   printf "| Address:     %s\n" "$(echo "$1" | cut -d',' -f3)"
-   printf "|              %s\n" "$(echo "$1" | cut -d',' -f4)"
-   printf "| Hourly:      %s\n" "$(echo "$1" | cut -d',' -f5)"
+   printf '\033[33m============== %s\033[0m\n' "$(csv_get "$1" $CUSTOMER_NAME)"
+   printf "| ID:          %s\n" "$(csv_get "$1" $CUSTOMER_ID)"
+   printf "| Address:     %s\n" "$(csv_get "$1" $CUSTOMER_ADDRESS)"
+   printf "|              %s\n" "$(csv_get "$1" $CUSTOMER_ZIP)"
+   printf "| Hourly:      %s\n" "$(csv_get "$1" $CUSTOMER_HOURLY)"
    echo
 }
 
@@ -128,9 +130,9 @@ cdb_remove() {
 #   0 - OK
 #   1 - No such customer
 cdb_calc_total() {
-   local cost
-   cdb_search "$1" "" cost
-   cost="$(echo "${cost}" | cut -d',' -f5)"
+   local entry cost
+   cdb_search "$1" "" entry
+   csv_get "${entry}" $CUSTOMER_HOURLY cost
    [ -z "${cost}" ] && return 1
    echo "scale=2; ${cost} * $2" | bc
 }
@@ -155,25 +157,25 @@ cdb_add_i() {
    cdb_search_by_ID "${CID}" "" old
 
    # Read the name for the new customer.
-   name="$(prompt "Name" "$(echo "${old}" | cut -d',' -f2)")"
+   name="$(prompt "Name" "$(csv_get "${old}" $CUSTOMER_NAME)")"
 
    # If no old entry is found yet, find any entry with the same name.
    [ -z "${old}" ] && cdb_search_by_name "${name}" "" old
 
    # Read the address for the new customer.
-   address="$(prompt "Address" "$(echo "${old}" | cut -d',' -f3)")"
+   address="$(prompt "Address" "$(csv_get "${old}" $CUSTOMER_ADDRESS)")"
 
    # Read the ZIP & city for the new customer.
    while true; do
-      zip="$(prompt "ZIP+City" "$(echo "${old}" | cut -d',' -f4)")"
-      echo "${zip}" | grep -q '^[0-9]\{5\}\s\+[a-zA-Z]\+$' && break
+      zip="$(prompt "ZIP+City" "$(csv_get "${old}" $CUSTOMER_ZIP)")"
+      is_zip "${zip}" && break
       echo "Invalid ZIP or City" >&2
    done
 
    # Read the hourly cost for the new customer.
    while true; do
-      cost="$(prompt "Hourly Cost" "$(echo "${old}" | cut -d',' -f5)")"
-      echo "${cost}" | grep -q '^[0-9]\+\(\.[0-9]\+\)\?$' && break
+      cost="$(prompt "Hourly Cost" "$(csv_get "${old}" $CUSTOMER_HOURLY)")"
+      is_cost "${cost}" && break
       echo "Invalid Cost" >&2
    done
 
@@ -198,8 +200,8 @@ cdb_add_i() {
 cdb_remove_i() {
    local entry CID name resp
    cdb_search "$1" "" entry
-   CID="$(echo "${entry}" | cut -d',' -f1)"
-   name="$(echo "${entry}" | cut -d',' -f2)"
+   csv_get "${entry}" $CUSTOMER_ID CID
+   csv_get "${entry}" $CUSTOMER_NAME name
 
    if [ -n "${name}" ]; then
       printf 'Are your sure to remove '%s' (%s)? ' "${name}" "${CID}" >&2

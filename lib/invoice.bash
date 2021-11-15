@@ -16,10 +16,8 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Invoice Generation
-# Dependencies:
-# - customers
-# - transactions
-# - error
+# External Dependencies:
+# - pdflatex
 
 invoice_template_file="${invoicedir}/template.tex"
 invoice_latex_file="${invoicedir}/invoice.tex"
@@ -35,10 +33,10 @@ hourrows_temp_file="${invoicedir}/hourrows.tmp"
 invoice_hourrows() {
    local line date num desc last_desc
    while read -r line; do
-      desc="$(echo "${line}" | cut -d',' -f6)"
+      csv_get "${line}" $TRANS_DESC desc
       [ "${desc}" != "${last_desc}" ] && printf '\\feetype{%s}\n' "${desc}"
-      date="$(date --date="$(echo "${line}" | cut -d',' -f3)" +"%x")"
-      num="$(echo "${line}" | cut -d',' -f4)"
+      date="$(date --date="$(csv_get "${line}" $TRANS_DATE)" +"%x")"
+      csv_get "${line}" $TRANS_NUM num
       printf '\\hourrow{%s}{%s}\n' "${date}" "${num}"
       last_desc="${desc}"
    done
@@ -55,11 +53,11 @@ invoice_pass1() {
    local IID CID name address zip taxID
 
    IID="$(next_invoice)"
-   CID="$(echo "$1" | cut -d',' -f1)"
-   name="$(echo "$1" | cut -d',' -f2)"
-   address="$(echo "$1" | cut -d',' -f3)"
-   zip="$(echo "$1" | cut -d',' -f4)"
-   rate="$(echo "$1" | cut -d',' -f5)"
+   csv_get "$1" $CUSTOMER_ID CID
+   csv_get "$1" $CUSTOMER_NAME name
+   csv_get "$1" $CUSTOMER_ADDRESS address
+   csv_get "$1" $CUSTOMER_ZIP zip
+   csv_get "$1" $CUSTOMER_HOURLY rate
    
    taxID="$(echo "${vendor_taxID}" | sed 's,/,\\\\slash{},g')"
 
