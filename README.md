@@ -24,15 +24,19 @@ A transaction corresponds to an entry in the resulting invoice.
 - Short Description
 
 ### How data is stored
-The customer and transaction information is stored in two separate files.
-One is called `customers.csv.gpg` and the other one is `transactions_YEAR.csv.gpg`.
-If encryption with gpg is disabled, the `.gpg` file extension is dropped.
-Both files are typically stored in the `${prefix}/db` directory.
-You can dump the contents of the customer database with `accounthing -pc`
-and the transaction database with `accounthing -pt`.
-By default databases are encrypted with gpg and contain the information in a stripped down version of the CSV format,
-the change being that fields that contain text enclosed in double-quotes (eg. "House cleaning, other stuff") are not allowed.
-Also by default versioning of the databases is enabled. Both options can be changed in the config file.
+The customer and transaction information is stored in two separate CSV files ("databases").
+By default, databases are encrypted using GPG and contain the information in a stripped down version of the CSV format,
+where fields that contain text enclosed in double-quotes (e.g., "House cleaning, other stuff") are not allowed.
+
+Customer information is stored in `customers.csv.gpg` and the transaction information is stored in `transactions_YEAR.csv.gpg`,
+where year matches the year of the transaction (`YYYY`).
+(If encryption with GPG is disabled, the `.gpg` file extension is dropped.)
+
+Both files are typically stored in the `${prefix}/db` directory, where `${prefix}` is the path `accounthing.sh` and supporting files are located.
+
+You can dump the contents of the customer database with `accounthing -pc` and the transaction database with `accounthing -pt`.
+
+By default, versioning of the databases is enabled using Git. GPG encryption and Git version control can be configured in the config file, `${prefix}/config.sh`.
 
 ## Usage
 
