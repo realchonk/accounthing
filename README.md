@@ -137,10 +137,18 @@ issue `./install.sh -h` for installation instructions.
 
 ## Troubleshooting
 
-#### GPG does not work.
-Make sure GPG is installed and properly configured. \
-Run `echo "Hello World" | gpg -e --default-recipient-self | gpg -d`. \
-This should print "Hello World" to the screen. \
-If not, something is wrong with your GPG setup. \
-Sometimes you just need to `export GPG_TTY=$(tty)`. \
-If nothing helps, you can disable encryption with GPG in the config.
+### GPG does not work
+1. Make sure GPG is installed and properly configured.
+
+2. Confirm the default key can be used to encrypt and decrypt:
+    ```
+    echo "Hello World" | gpg -e --default-recipient-self | gpg -d
+    ```
+    This should print "Hello World" to the screen.
+
+3. Confirm `GPG_TTY` is set in the current shell:
+    ```
+    export GPG_TTY=$(tty)
+    ```
+
+    If nothing helps, you can disable encryption with GPG in the config.
