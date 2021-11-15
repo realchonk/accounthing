@@ -51,6 +51,7 @@ check_dep "bash"
 check_dep "pdflatex"
 check_dep "gpg" 1
 check_dep "git" 1
+check_dep "dialog" 1
 
 [ "${failed}" = 1 ] && exit 1
 
