@@ -65,19 +65,21 @@ case "$1" in
    echo "Usage: ${prog} [options]"
    echo
    echo "Options:"
-   echo "  -h                 Show this help page."
-   echo "  -sc name/ID        Search for a customer."
-   echo "  -ac                Add a new customer."
-   echo "  -lc                List all customers."
-   echo "  -pc                Dump the customer database."
-   echo "  -rc name/ID        Remove a customer."
-   echo "  -st term           Search for a transaction."
-   echo "  -at                Add a new transaction."
-   echo "  -lt [year]         List all transactions during the current year or a specified year."
-   echo "  -pt                Dump the transaction database."
-   echo "  -rt ID             Remove a transaction."
-   echo "  -i customer month  Generate an invoice for a particular customer."
-   echo "  -ia month          Generate invoices for all transactions during a month."
+   echo "  -h                                      Show this help page."
+   echo "  -I                                      Interactive TUI mode."
+   echo "  -sc name/ID                             Search for a customer."
+   echo "  -ac                                     Add a new customer."
+   echo "  -lc                                     List all customers."
+   echo "  -pc                                     Dump the customer database."
+   echo "  -rc name/ID                             Remove a customer."
+   echo "  -st term                                Search for a transaction."
+   echo "  -at                                     Add a new transaction."
+   echo "  -atc CID date num [total] description   Directly add a transaction."
+   echo "  -lt [year]                              List all transactions during the current year or a specified year."
+   echo "  -pt                                     Dump the transaction database."
+   echo "  -rt ID                                  Remove a transaction."
+   echo "  -i customer month                       Generate an invoice for a particular customer."
+   echo "  -ia month                               Generate invoices for all transactions during a month."
    exit
    ;;
 -sc)
@@ -118,6 +120,10 @@ case "$1" in
    ;;
 -at)
    tdb_add_i
+   ret="$?"
+   ;;
+-atc)
+   tdb_add_direct "$2" "$3" "$4" "$5" "$6"
    ret="$?"
    ;;
 -rc)

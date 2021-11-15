@@ -88,6 +88,37 @@ tdb_search() {
    csv_search "${file}" "${pattern}" "$2" "$3"
 }
 
+# Add a transaction directly.
+# Arguments:
+#   $1 - CID
+#   $2 - date
+#   $3 - num
+#   $4 - total (optional)
+#   $5 - description
+tdb_add_direct() {
+   local total customer TID
+
+   is_date "$2" || error "Invalid Date: $2"
+   is_number "$3" || error "Invalid Count: $3"
+   cdb_search_by_ID "$1" "" customer
+   [ -z "${customer}" ] && error "No such customer: $1"
+
+   if [ "$4" ]; then
+      is_cost "$4" || error "Invalid total"
+      total="$4"
+   else
+      total="$(cdb_calc_total "$1" "$3")"
+   fi
+
+   echo "$5" | grep -qF ',' && error "Description contains a comma"
+
+   TID="$(csv_next_ID "${tdb_file}")"
+
+   csv_append "${tdb_file}" "${TID},$1,$2,$3,${total},$5"
+
+   git_append_msg "Added new transaction with ID ${TID}"
+}
+
 # Interactively add a new transacton to the current database.
 # Exit Code:
 #   0 - OK
