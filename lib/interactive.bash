@@ -85,8 +85,12 @@ int_main() {
    done
 }
 
+##################################
+######### CUSTOMER STUFF #########
+##################################
+
 int_customers() {
-   local choice ret_val csv_customers IFS
+   local e choice ret_val csv_customers IFS
    local CID cname
    local -a dialog_args
 
@@ -303,4 +307,271 @@ int_remove_customer() {
       return 1
       ;;
    esac
+}
+
+##################################
+####### TRANSACTION STUFF ########
+##################################
+
+int_transactions() {
+   local transactions e CID TID date desc customer name
+   local choice ret_val
+   local -a dialog_args
+
+   while true; do
+      dialog_args=()
+      csv_read "${tdb_file}" transactions
+
+      IFS="="
+      for e in $(echo "${transactions}" | tr '\n' '='); do
+         csv_get "$e" $TRANS_ID TID
+         csv_get "$e" $TRANS_CID CID
+         csv_get "$e" $TRANS_DATE date
+         csv_get "$e" $TRANS_DESC desc
+         cdb_search_by_ID "${CID}" "" customer
+         if [ "${customer}" ]; then
+            csv_get "${customer}" $CUSTOMER_NAME name
+         else
+            name="${CID}"
+         fi
+         dialog_args+=("${TID}" "${name} ${date}: ${desc}")
+      done
+
+      open_dialog choice ret_val --cancel-label "Back"   \
+         --menu "Transaction Management" 40 60 10        \
+         "Add" "Create a new transacion."                \
+         "---" "------------------------"                \
+         "${dialog_args[@]}"                             \
+         "---" "------------------------"                \
+         "Back" "Go back to the main menu."              \
+         "Exit" "Close this program."
+
+      case "${ret_val}" in
+      $DIALOG_CANCEL)
+         return 0
+         ;;
+      $DIALOG_ESC)
+         return 1
+         ;;
+      esac
+
+      case "${choice}" in
+      Add)
+         int_add_transaction
+         ;;
+      ---)
+         continue
+         ;;
+      Back)
+         return 0
+         ;;
+      Exit)
+         return 1
+         ;;
+      *)
+         int_manage_transaction "${choice}"
+         ;;
+      esac
+      [ $? != 0 ] && return 1
+   done
+}
+
+int_manage_transaction() {
+   local choice ret_val
+
+   while true; do
+      open_dialog choice ret_val                            \
+         --title "Manage Transaction"                       \
+         --cancel-label "Back"                              \
+         --menu "Transaction $1" 10 60 10                   \
+         "Show" "Display infomation about the transaction." \
+         "Edit" "Change transaction details."               \
+         "Remove" "Delete the transaction from the database." 
+      
+      case "${ret_val}" in
+      $DIALOG_CANCEL)
+         return 0
+         ;;
+      $DIALOG_ESC)
+         return 1
+         ;;
+      esac
+
+      case "${choice}" in
+      Show)
+         int_show_transaction "$1"
+         [ $? -ne 0 ] && return 1
+         ;;
+      Edit)
+         int_edit_transaction "$1"
+         [ $? -ne 0 ] && return 1
+         ;;
+      Remove)
+         int_remove_transaction "$1"
+         case $? in
+         0)
+            return
+            ;;
+         1)
+            return 1
+            ;;
+         2)
+            continue
+            ;;
+         esac
+         ;;
+      esac
+   done
+}
+
+int_show_transaction() {
+   local trans CID date num total desc text customer cname
+   tdb_search "$1" "" trans
+
+   csv_get "${trans}" $TRANS_CID CID
+   csv_get "${trans}" $TRANS_DATE date
+   csv_get "${trans}" $TRANS_NUM num
+   csv_get "${trans}" $TRANS_TOTAL total
+   csv_get "${trans}" $TRANS_DESC desc
+
+   cdb_search_by_ID "${CID}" "" customer
+   csv_get "${customer}" $CUSTOMER_NAME cname
+
+   [ -z "${cname}" ] && cname="(Deleted)"
+
+   text=""
+   text+="ID:           $1\n"
+   text+="Customer:     ${cname} (${CID})\n"
+   text+="Description:  ${desc}\n"
+   text+="Date:         ${date}\n"
+   text+="Count:        ${num}\n"
+   text+="Total:        ${total}\n"
+
+   dialog --title "Transaction Information" \
+      --msgbox "${text}" 10 40
+}
+
+int_remove_transaction() {
+   local name csv_entry
+
+   dialog --title "Erase Transaction" \
+      --yesno "Are you sure to erase transaction $1?" \
+      6 60
+
+   case "$?" in
+   $DIALOG_OK)
+      tdb_remove "$1"
+      git_append_msg "Removed Transaction $1"
+      return 0
+      ;;
+   $DIALOG_CANCEL)
+      return 2
+      ;;
+   $DIALOG_ESC)
+      return 1
+      ;;
+   esac
+}
+
+
+int_add_transaction() {
+   int_edit_transaction
+}
+int_edit_transaction() {
+   local TID CID date num total desc customer price
+   local csv_entry choice ret_val new_entry cname tmp
+   if [ "$1" ]; then
+      TID="$1"
+      tdb_search "${TID}" "" csv_entry
+   else
+      TID="$(csv_next_ID "${tdb_file}")"
+      title="New Transaction"
+   fi
+
+   while true; do
+      csv_get "${csv_entry}" $TRANS_CID CID
+      csv_get "${csv_entry}" $TRANS_DATE date
+      csv_get "${csv_entry}" $TRANS_NUM num
+      csv_get "${csv_entry}" $TRANS_TOTAL total
+      csv_get "${csv_entry}" $TRANS_DESC desc
+
+      cdb_search_by_ID "${CID}" "" customer
+      if [ "${customer}" ]; then
+         csv_get "${customer}}" $CUSTOMER_NAME cname
+      else
+         cname="${CID}"
+      fi
+
+      price="$(echo "scale=2; ${total} / ${num}" | bc)"
+
+      [ -z "${title}" ] && title="Transaction ${TID}"
+
+      open_dialog choice ret_val                         \
+         --title "Edit Transaction"                      \
+         --form "${title}" 20 60 7                       \
+         "ID"           0 0 "${TID}"         0 15 0  0   \
+         "Customer"     2 0 "${cname}"       2 15 30 30  \
+         "Description"  3 0 "${desc}"        3 15 30 30  \
+         "Date"         4 0 "${date}"        4 15 30 30  \
+         "Count"        5 0 "${num}"         5 15 30 30  \
+         "Price"        6 0 "${price}"       6 15 30 30  \
+         "Total"        7 0 "${total}"       7 15 0  0
+
+      case "${ret_val}" in
+      $DIALOG_CANCEL)
+         return 0
+         ;;
+      $DIALOG_ESC)
+         return 1
+         ;;
+      esac
+
+      if echo "${choice}" | grep -qF ','; then
+         title="Commas are not allowed!"
+         continue
+      fi
+
+      tmp="$(echo "${choice}" | tr '\n' ',' | sed 's/\,$//')"
+
+      cname="$(echo "${tmp}" | cut -d',' -f1)"
+      desc="$(echo "${tmp}" | cut -d',' -f2)"
+      date="$(echo "${tmp}" | cut -d',' -f3)"
+      num="$(echo "${tmp}" | cut -d',' -f4)"
+      price="$(echo "${tmp}" | cut -d',' -f5)"
+
+
+      if is_cost "${price}" && is_number "${num}"; then
+         total="$(echo "scale=2; ${price} * ${num}" | bc)"
+      else
+         title="Invalid price or count"
+         csv_get "${csv_entry}" $TRANS_TOTAL total
+         csv_entry="${TID},${CID},${date},${num},${total},${desc}"
+         continue
+      fi
+
+      cdb_search "${cname}" "" tmp
+      if [ "${tmp}" ]; then
+         csv_get "${tmp}" $CUSTOMER_ID CID
+      else
+         title="No such customer: ${cname}"
+         csv_entry="${TID},${cname},${date},${num},${total},${desc}"
+         continue
+      fi
+
+      csv_entry="${TID},${CID},${date},${num},${total},${desc}"
+
+      is_date "${date}" || { title="Invalid Date"; continue; }
+
+      break
+   done
+
+   tdb_remove "${TID}"
+
+   csv_append "${tdb_file}" "${csv_entry}"
+
+   if [ "$1" ]; then
+      git_append_msg "Changed Transaction Details for ${TID}"
+   else
+      git_append_msg "Added Transaction ${TID}"
+   fi
 }
