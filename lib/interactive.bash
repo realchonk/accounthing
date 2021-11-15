@@ -103,7 +103,7 @@ int_customers() {
 
       open_dialog choice ret_val --cancel-label "Back"   \
          --menu "Customer Management" 40 40 10           \
-         "Add" "a new customer"                          \
+         "Add" "Create a new customer."                  \
          "---" "--------------"                          \
          "${dialog_args[@]}"                             \
          "---" "--------------"                          \
