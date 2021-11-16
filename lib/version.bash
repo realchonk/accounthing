@@ -43,7 +43,7 @@ set_db_version() {
 
 # For testing purposes/template
 upgrade_v0() {
-   set_db_version "1"
+   set_db_version "$1"
 }
 
 # Upgrade from v1 to v2.
@@ -73,7 +73,7 @@ upgrade_v1() {
 
    csv_write "${tdb_file}" "$(echo "${new_trans}" | tr '=' '\n')"
 
-   set_db_version "2"
+   set_db_version "$1"
 }
 
 declare -a upgrade_funcs
@@ -82,7 +82,7 @@ upgrade_funcs[1]=upgrade_v1
 
 # Checks the version of this program with the version the databases were created with.
 check_version() {
-   local i resp ver="$(db_version)"
+   local i resp ver="$(db_version)" commit
 
    if [ "${ver}" -lt "${DB_VERSION}" ]; then
       echo "The databases were created with an older version of this program." >&2
@@ -90,16 +90,18 @@ check_version() {
       read -r resp
       [ "${resp}" = "y" ] || exit 0
 
-      # TODO: add git notice (git decribe --always)
+      commit="$(git_get_commit)"
 
       for (( i = ${ver}; i != ${DB_VERSION}; i++ )); do
          if [ "${upgrade_funcs[$ver]}" ]; then
-            eval "${upgrade_funcs[$ver]}"
+            eval "${upgrade_funcs[$ver]} $((ver + 1))"
          else
             echo "Automatic upgrading from v${ver} to $((ver + 1)) is not supported!" >&2
             error "Please look into the documentation how to manually do the upgrade."
          fi
       done
+
+      echo "If you have any issues, run 'git reset --hard ${commit}' in the database directory, to revert any changes." >&2
 
       # Check again
       check_version

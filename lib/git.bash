@@ -45,10 +45,19 @@ if [ "${enable_git}" = true ]; then
       popd >/dev/null
    }
 
+   # Prints the ID of the last commit
+   git_get_commit() {
+      git describe --always 2>/dev/null
+   }
+
 else
 
    git_commit() {
       :
+   }
+
+   git_get_commit() {
+      return 1
    }
 
 fi
@@ -61,3 +70,4 @@ git_append_msg() {
    git_commit_msg="$(printf "%s\n%s" "${git_commit_msg}" "$1")"
    git_need_commit=1
 }
+
