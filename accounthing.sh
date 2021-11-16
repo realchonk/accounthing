@@ -79,7 +79,7 @@ case "$1" in
    echo "  -rc name/ID                             Remove a customer."
    echo "  -st term                                Search for a transaction."
    echo "  -at                                     Add a new transaction."
-   echo "  -atc CID date num [total] description   Directly add a transaction."
+   echo "  -atc CID date num [price] description   Directly add a transaction."
    echo "  -lt [year]                              List all transactions during the current year or a specified year."
    echo "  -pt                                     Dump the transaction database."
    echo "  -rt ID                                  Remove a transaction."
