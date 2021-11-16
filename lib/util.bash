@@ -94,3 +94,11 @@ else
       :
    }
 fi
+
+# Calculate the total from a count and a price.
+# Arguments:
+#   $1 - count
+#   $2 - price
+calc_total() {
+   echo "scale=2; $1 * $2" | bc
+}

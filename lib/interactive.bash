@@ -439,14 +439,16 @@ int_manage_transaction() {
 }
 
 int_show_transaction() {
-   local trans CID date num total desc text customer cname
+   local trans CID date num price total desc text customer cname
    tdb_search "$1" "" trans
 
    csv_get "${trans}" $TRANS_CID CID
    csv_get "${trans}" $TRANS_DATE date
    csv_get "${trans}" $TRANS_NUM num
-   csv_get "${trans}" $TRANS_TOTAL total
+   csv_get "${trans}" $TRANS_PRICE price
    csv_get "${trans}" $TRANS_DESC desc
+
+   total="$(calc_total "${num}" "${price}")"
 
    cdb_search_by_ID "${CID}" "" customer
    csv_get "${customer}" $CUSTOMER_NAME cname
@@ -459,6 +461,7 @@ int_show_transaction() {
    text+="Description:  ${desc}\n"
    text+="Date:         ${date}\n"
    text+="Count:        ${num}\n"
+   text+="Price:        ${price}\n"
    text+="Total:        ${total}\n"
 
    dialog --title "Transaction Information" \
@@ -492,7 +495,7 @@ int_add_transaction() {
    int_edit_transaction
 }
 int_edit_transaction() {
-   local TID CID date num total desc customer price
+   local TID CID date num desc customer price
    local csv_entry choice ret_val new_entry cname tmp
    if [ "$1" ]; then
       TID="$1"
@@ -506,17 +509,18 @@ int_edit_transaction() {
       csv_get "${csv_entry}" $TRANS_CID CID
       csv_get "${csv_entry}" $TRANS_DATE date
       csv_get "${csv_entry}" $TRANS_NUM num
-      csv_get "${csv_entry}" $TRANS_TOTAL total
+      csv_get "${csv_entry}" $TRANS_PRICE price
       csv_get "${csv_entry}" $TRANS_DESC desc
+
 
       cdb_search_by_ID "${CID}" "" customer
       if [ "${customer}" ]; then
          csv_get "${customer}}" $CUSTOMER_NAME cname
+         [ -z "${price}" ] && \
+            csv_get "${customer}" $CUSTOMER_HOURLY price
       else
          cname="${CID}"
       fi
-
-      price="$(echo "scale=2; ${total} / ${num}" | bc)"
 
       [ -z "${title}" ] && title="Transaction ${TID}"
 
@@ -528,8 +532,7 @@ int_edit_transaction() {
          "Description"  3 0 "${desc}"        3 15 30 30  \
          "Date"         4 0 "${date}"        4 15 30 30  \
          "Count"        5 0 "${num}"         5 15 30 30  \
-         "Price"        6 0 "${price}"       6 15 30 30  \
-         "Total"        7 0 "${total}"       7 15 0  0
+         "Price"        6 0 "${price}"       6 15 30 30
 
       case "${ret_val}" in
       $DIALOG_CANCEL)
@@ -554,28 +557,20 @@ int_edit_transaction() {
       price="$(echo "${tmp}" | cut -d',' -f5)"
 
 
-      if is_cost "${price}" && is_number "${num}"; then
-         total="$(echo "scale=2; ${price} * ${num}" | bc)"
-      else
-         title="Invalid price or count"
-         csv_get "${csv_entry}" $TRANS_TOTAL total
-         csv_entry="${TID},${CID},${date},${num},${total},${desc}"
-         continue
-      fi
+      is_number "${num}" || { title="Invalid count"; continue; }
+      is_cost "${price}" || { title="Invalid price"; continue; }
+      is_date "${date}"  || { title="Invalid Date"; continue; }
 
       cdb_search "${cname}" "" tmp
       if [ "${tmp}" ]; then
          csv_get "${tmp}" $CUSTOMER_ID CID
       else
          title="No such customer: ${cname}"
-         csv_entry="${TID},${cname},${date},${num},${total},${desc}"
+         csv_entry="${TID},${cname},${date},${num},${price},${desc}"
          continue
       fi
 
-      csv_entry="${TID},${CID},${date},${num},${total},${desc}"
-
-      is_date "${date}" || { title="Invalid Date"; continue; }
-
+      csv_entry="${TID},${CID},${date},${num},${price},${desc}"
       break
    done
 
