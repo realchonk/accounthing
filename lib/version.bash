@@ -19,7 +19,7 @@
 
 # !!! IMPORTANT !!!
 # Increment this version number if you change the layout of the databases.
-DB_VERSION=1
+DB_VERSION=2
 
 versionfile="${datadir}/version"
 
