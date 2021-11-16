@@ -1,4 +1,3 @@
-- Remove `total` and add `price` instead to transactions
 - Make command-line options intuitive
 - Man page
 - More Error Checking

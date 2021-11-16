@@ -96,10 +96,10 @@
 
 
     % Create a new row from date and hours worked (use stored fee type and hourly rate)
-    \newcommand*{\hourrow}[2]{%
+    \newcommand*{\hourrow}[3]{%
         \addtocounter{hours}{1000 * \real{##2}}%
         \addtocounter{subhours}{1000 * \real{##2}}%
-        \unitrow{##1}{##2}{\@hourlyrate}{}%
+        \unitrow{##1}{##2}{##3}{}%
     }
     \renewcommand{\tabcolsep}{0.8ex}
     \setlength\LTleft{0pt}

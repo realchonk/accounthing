@@ -22,14 +22,14 @@
 # - Customer ID      (eg. 001)
 # - Date             (eg. 2021-10-29)
 # - Num              (eg. 4.5)
-# - Total            (eg. 67.50)
+# - Price            (eg. 12.40)
 # - Description      (eg. Haushaltshilfe)
 
 TRANS_ID=1
 TRANS_CID=2
 TRANS_DATE=3
 TRANS_NUM=4
-TRANS_TOTAL=5
+TRANS_PRICE=5
 TRANS_DESC=6
 
 # tdb_default_desc is now defined in the config
@@ -93,10 +93,10 @@ tdb_search() {
 #   $1 - CID
 #   $2 - date
 #   $3 - num
-#   $4 - total (optional)
+#   $4 - price (optional)
 #   $5 - description
 tdb_add_direct() {
-   local total customer TID
+   local price customer TID
 
    is_date "$2" || error "Invalid Date: $2"
    is_number "$3" || error "Invalid Count: $3"
@@ -104,17 +104,17 @@ tdb_add_direct() {
    [ -z "${customer}" ] && error "No such customer: $1"
 
    if [ "$4" ]; then
-      is_cost "$4" || error "Invalid total"
-      total="$4"
+      is_cost "$4" || error "Invalid Cost: $4"
+      price="$4"
    else
-      total="$(cdb_calc_total "$1" "$3")"
+      csv_get "${customer}" $CUSTOMER_HOURLY price
    fi
 
    echo "$5" | grep -qF ',' && error "Description contains a comma"
 
    TID="$(csv_next_ID "${tdb_file}")"
 
-   csv_append "${tdb_file}" "${TID},$1,$2,$3,${total},$5"
+   csv_append "${tdb_file}" "${TID},$1,$2,$3,${price},$5"
 
    git_append_msg "Added new transaction with ID ${TID}"
 }
@@ -124,7 +124,7 @@ tdb_add_direct() {
 #   0 - OK
 #   1 - Failed
 tdb_add_i() {
-   local TID CID date num total tmp old oldname desc
+   local TID CID customer date num price tmp old oldname desc
 
    # Read the transaction ID.
    while true; do
@@ -136,16 +136,16 @@ tdb_add_i() {
    
    # Find an old transaction if any
    tdb_search "${TID}" "" old
-   cdb_search_by_ID "$(csv_get "${old}" $TRANS_CID)" "" tmp
-   csv_get "${tmp}" $CUSTOMER_NAME oldname
+   cdb_search_by_ID "$(csv_get "${old}" $TRANS_CID)" "" customer
+   csv_get "${customer}" $CUSTOMER_NAME oldname
 
    # Read the customer ID/name.
    while true; do
-      cdb_search "$(prompt "Customer" "${oldname}")" "" tmp
-      if [ -z "${tmp}" ]; then
+      cdb_search "$(prompt "Customer" "${oldname}")" "" customer
+      if [ -z "${customer}" ]; then
          echo "Invalid Customer" >&2
       else
-         csv_get "${tmp}" $CUSTOMER_ID CID
+         csv_get "${customer}" $CUSTOMER_ID CID
          break
       fi
    done
@@ -173,18 +173,18 @@ tdb_add_i() {
 
    # Read the number of hours.
    while true; do
-      num="$(prompt "Number of hours" "$(csv_get "${old}" $TRANS_NUM)")"
+      num="$(prompt "Number of hours/units" "$(csv_get "${old}" $TRANS_NUM)")"
       is_number "${num}" && break
       echo "Invalid Number" >&2
    done
 
-   # Pre-calculate the default total.
-   tmp="$(cdb_calc_total "${CID}" "${num}")"
-   # Read the total cost.
+   # Get the default price.
+   csv_get "${customer}" $CUSTOMER_HOURLY price
+   # Read the price per unit.
    while true; do
-      total="$(prompt "Total" "${tmp}")"
-      is_number "${total}" && break
-      echo "Invalid Number" >&2
+      price="$(prompt "Price" "${price}")"
+      is_cost "${price}" && break
+      echo "Invalid Price" >&2
    done
 
 
@@ -192,7 +192,7 @@ tdb_add_i() {
    tdb_remove "${TID}"
 
    # Update the transaction database
-   csv_append "${tdb_file}" "${TID},${CID},${date},${num},${total},${desc}"
+   csv_append "${tdb_file}" "${TID},${CID},${date},${num},${price},${desc}"
 
 
    git_append_msg "Added new transaction with ID ${TID}"
@@ -242,16 +242,22 @@ tdb_print() {
 #   0 - OK
 #   1 - Invalid entry
 tdb_do_print() {
-   local TID CID tmp
+   local TID CID tmp count price total
    [ -z "$1" ] && return 1
+
    csv_get "$1" $TRANS_ID TID
    csv_get "$1" $TRANS_CID CID
+   csv_get "$1" $TRANS_NUM count
+   csv_get "$1" $TRANS_PRICE price
+   total="$(calc_total "${count}" "${price}")"
+
    printf '\033[36m============== %s\033[0m\n' "${TID}-$(date +%Y)"
    cdb_search "${CID}" "" tmp
    printf '| Customer:    %s (%s)\n' "$(csv_get "${tmp}" $CUSTOMER_NAME)" "${CID}"
    printf '| Date:        %s\n' "$(csv_get "$1" $TRANS_DATE)"
-   printf '| Num Hours:   %s\n' "$(csv_get "$1" $TRANS_NUM)"
-   printf '| Total:       %s\n' "$(csv_get "$1" $TRANS_TOTAL)"
+   printf '| Count:       %s\n' "${count}"
+   printf '| Price:       %s\n' "${price}"
+   printf '| Total:       %s\n' "${total}"
    printf '| Description: %s\n' "$(csv_get "$1" $TRANS_DESC)"
    echo
 }
