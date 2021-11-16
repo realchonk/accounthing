@@ -158,6 +158,38 @@ int_customers() {
    done
 }
 
+int_select_customer() {
+   local IFS e dialog_args csv_customers
+   local CID name choice ret_val
+
+   dialog_args=()
+   csv_read "customers" csv_customers
+
+   IFS="="
+   for e in $(echo "${csv_customers}" | tr '\n' '='); do
+      csv_get "$e" $CUSTOMER_ID CID
+      csv_get "$e" $CUSTOMER_NAME name
+      dialog_args+=("${CID}" "${name}")
+   done
+
+   open_dialog choice ret_val             \
+      --menu "Select Customer" 40 40 10   \
+      "${dialog_args[@]}"
+
+   case "${ret_val}" in
+   $DIALOG_OK)
+      eval "${1}='${choice}'"
+      return 0
+      ;;
+   $DIALOG_CANCEL)
+      return 2
+      ;;
+   $DIALOG_ESC)
+      return 1
+      ;;
+   esac
+}
+
 int_manage_customer() {
    local choice ret_val name tmp
 
@@ -242,7 +274,7 @@ int_edit_customer() {
       CID="$1"
       cdb_search_by_ID "${CID}" "" csv_entry
    else
-      CID="$(csv_next_ID "customer")"
+      CID="$(csv_next_ID "customers")"
       title="New Customer"
    fi
 
@@ -492,17 +524,34 @@ int_remove_transaction() {
 
 
 int_add_transaction() {
-   int_edit_transaction
+   local customer_ID
+   int_select_customer customer_ID
+   case "$?" in
+   0)
+      int_edit_transaction ":${customer_ID}"
+      ;;
+   1)
+      return 1
+      ;;
+   2)
+      return 0
+      ;;
+   esac
 }
 int_edit_transaction() {
    local TID CID date num desc customer price
    local csv_entry choice ret_val new_entry cname tmp
-   if [ "$1" ]; then
+   if echo "$1" | grep -q '^:'; then
+      CID="$(echo "$1" | sed 's/^://')"
+      TID="$(csv_next_ID "${tdb_file}")"
+      cdb_search_by_ID "${CID}" "" customer
+      echo "${CID}" >log
+      csv_get "${customer}" $CUSTOMER_HOURLY price
+      csv_entry="${TID},${CID},$(date +%F),,${price},${tdb_default_desc}"
+      title="New Transaction"
+   else
       TID="$1"
       tdb_search "${TID}" "" csv_entry
-   else
-      TID="$(csv_next_ID "${tdb_file}")"
-      title="New Transaction"
    fi
 
    while true; do
