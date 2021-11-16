@@ -34,12 +34,41 @@ db_version() {
    fi
 }
 
+# Update the version file.
+set_db_version() {
+   echo "Upgraded databases to v$1!" >&2
+   echo "$1" > "${versionfile}"
+}
+
+# For testing purposes/template
+upgrade_v0() {
+   set_db_version "1"
+}
+
+declare -a upgrade_funcs
+upgrade_funcs[0]=upgrade_v0
+
 # Checks the version of this program with the version the databases were created with.
 check_version() {
-   local ver="$(db_version)"
-   
+   local i resp ver="$(db_version)"
+
    if [ "${ver}" -lt "${DB_VERSION}" ]; then
-      error "The databases were created with an older version of this program. Automatic upgrading is not yet implemented, therefore please look up instructions on how to upgrade your databases."
+      echo "The databases were created with an older version of this program." >&2
+      printf "%s" "Would you like to try to upgrade them automatically? " >&2
+      read -r resp
+      [ "${resp}" = "y" ] || exit 0
+
+      for (( i = ${ver}; i != ${DB_VERSION}; i++ )); do
+         if [ "${upgrade_funcs[$ver]}" ]; then
+            eval "${upgrade_funcs[$ver]}"
+         else
+            echo "Automatic upgrading from v${ver} to $((ver + 1)) is not supported!" >&2
+            error "Please look into the documentation how to manually do the upgrade."
+         fi
+      done
+
+      # Check again
+      check_version
    elif [ "${ver}" -gt "${DB_VERSION}" ]; then
       error "The databases were created with a newer version of this program, please update to the latest versio."
    fi
