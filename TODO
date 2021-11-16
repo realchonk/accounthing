@@ -6,5 +6,10 @@
 - Autoconf-like options (--prefix=PATH) for install.sh
 - Syncing/Pushing to an external Git repository.
 - Editing/Removing items could delete the whole database (probably fixed).
-- Add fully interactive mode (-I)
 - Add graphical wrapper
+
+# Interactive mode
+- Support for sorting of customers and transactions
+- Invoice generation
+- Git management
+- Editing the config
