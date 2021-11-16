@@ -20,7 +20,7 @@ Click [here](./invoice_example.pdf) to see an example invoice.
 - Related customer ID
 - Date
 - Number of hours/units
-- Total
+- Unit price
 - Short Description
 
 ### How data is stored
@@ -74,9 +74,9 @@ accounthing -at
 
 To create a new transaction directly from the command line:
 ```
-accounthing -atc CID date num [total] description
+accounthing -atc CID date num [price] description
 ```
-Where `CID` is the customer ID, and the `total` amount is optional.
+Where `CID` is the customer ID, and the `price`, if not specified, is taken from the default customer price.
 
 To list all transactions:
 ```
