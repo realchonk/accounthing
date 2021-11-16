@@ -56,9 +56,10 @@ int_main() {
    local choice ret_val
 
    while true; do
-      open_dialog choice ret_val --menu "Accounthing Main Menu" 10 60 4  \
-         "Customers" "Manage the customer database."           \
-         "Transactions" "Manage the transactions database."    \
+      open_dialog choice ret_val --menu "Accounthing Main Menu" 12 60 5    \
+         "Customers"    "Manage the customer database."                    \
+         "Transactions" "Manage the transactions database."                \
+         "Version"      "Show version information."                        \
          "Exit" "Close this program."
 
       case "${ret_val}" in
@@ -77,12 +78,25 @@ int_main() {
       Transactions)
          int_transactions
          ;;
+      Version)
+         int_version
+         ;;
       Exit)
          return
          ;;
       esac
       [ "$?" != 0 ] && break
    done
+}
+
+int_version() {
+   local text=""
+
+   text+="Program DB Version: ${DB_VERSION}\n"
+   text+="Local DB Version: $(db_version)\n"
+
+   dialog --title "Customer Information"  \
+      --msgbox "${text}" 8 40
 }
 
 ##################################

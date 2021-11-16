@@ -8,3 +8,4 @@
 - Editing/Removing items could delete the whole database (probably fixed).
 - Add fully interactive mode (-I)
 - Add graphical wrapper
+- Add automatic upgrading of databases to new versions
