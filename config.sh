@@ -19,7 +19,7 @@ enable_git=true
 # Header of the commit message.
 git_commit_msg="Automatic Update"
 
-# Path to the git binary. (Can be safely left empty)
+# Path to the git binary. (Leave empty for auto-detection)
 GIT=""
 
 
@@ -28,18 +28,17 @@ GIT=""
 # Enable encryption of the databases with gpg (true/false).
 enable_gpg=true
 
-# Path to the gpg binary. (Can be safely left empty)
+# Path to the gpg binary. (Leave empty for auto-detection)
 GPG=""
 
 
 ## Other options
 
 # Enable caching of files (true/false)
-# This is still somewhat experimental,
-# but causes the program to run a lot fater.
+# With this enabled, the program should run much faster.
 enable_caching=true
 
-# Enable debug output (true/fals)
+# Enable debug output (true/false)
 enable_debug=false
 
 # The default description of a transaction.
