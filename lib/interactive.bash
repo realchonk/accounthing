@@ -111,6 +111,7 @@ int_customers() {
    while true; do
       dialog_args=()
       csv_read "customers" csv_customers
+      csv_customers="$(sort <<< "${csv_customers}")"
 
       IFS="="
       for e in $(echo "${csv_customers}" | tr '\n' '='); do
@@ -164,6 +165,7 @@ int_select_customer() {
 
    dialog_args=()
    csv_read "customers" csv_customers
+   csv_customers="$(sort <<< "${csv_customers}")"
 
    IFS="="
    for e in $(echo "${csv_customers}" | tr '\n' '='); do
@@ -367,6 +369,7 @@ int_transactions() {
    while true; do
       dialog_args=()
       csv_read "${tdb_file}" transactions
+      transactions="$(sort <<< "${transactions}")"
 
       IFS="="
       for e in $(echo "${transactions}" | tr '\n' '='); do
@@ -545,7 +548,6 @@ int_edit_transaction() {
       CID="$(echo "$1" | sed 's/^://')"
       TID="$(csv_next_ID "${tdb_file}")"
       cdb_search_by_ID "${CID}" "" customer
-      echo "${CID}" >log
       csv_get "${customer}" $CUSTOMER_HOURLY price
       csv_entry="${TID},${CID},$(date +%F),,${price},${tdb_default_desc}"
       title="New Transaction"
@@ -605,6 +607,7 @@ int_edit_transaction() {
       num="$(echo "${tmp}" | cut -d',' -f4)"
       price="$(echo "${tmp}" | cut -d',' -f5)"
 
+      csv_entry="${TID},${CID},${date},${num},${price},${desc}"
 
       is_number "${num}" || { title="Invalid count"; continue; }
       is_cost "${price}" || { title="Invalid price"; continue; }
