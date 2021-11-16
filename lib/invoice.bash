@@ -31,13 +31,14 @@ hourrows_temp_file="${invoicedir}/hourrows.tmp"
 # Returns:
 #   \hourrow{date}{num}
 invoice_hourrows() {
-   local line date num desc last_desc
+   local line date num price desc last_desc
    while read -r line; do
       csv_get "${line}" $TRANS_DESC desc
       [ "${desc}" != "${last_desc}" ] && printf '\\feetype{%s}\n' "${desc}"
       date="$(date --date="$(csv_get "${line}" $TRANS_DATE)" +"%x")"
       csv_get "${line}" $TRANS_NUM num
-      printf '\\hourrow{%s}{%s}\n' "${date}" "${num}"
+      csv_get "${line}" $TRANS_PRICE price
+      printf '\\hourrow{%s}{%s}{%s}\n' "${date}" "${num}" "${price}"
       last_desc="${desc}"
    done
 }
@@ -57,7 +58,6 @@ invoice_pass1() {
    csv_get "$1" $CUSTOMER_NAME name
    csv_get "$1" $CUSTOMER_ADDRESS address
    csv_get "$1" $CUSTOMER_ZIP zip
-   csv_get "$1" $CUSTOMER_HOURLY rate
    
    taxID="$(echo "${vendor_taxID}" | sed 's,/,\\\\slash{},g')"
 
@@ -66,7 +66,6 @@ invoice_pass1() {
       -e "s/%CUSTOMER_NAME%/${name}/"              \
       -e "s/%CUSTOMER_ADDRESS%/${address}/"        \
       -e "s/%CUSTOMER_ZIP%/${zip}/"                \
-      -e "s/%CUSTOMER_HOURLY%/${rate}/"            \
       -e "s/%VENDOR_NAME%/${vendor_name}/"         \
       -e "s/%VENDOR_OWNER%/${vendor_owner}/"       \
       -e "s/%VENDOR_ADDRESS%/${vendor_address}/"   \
