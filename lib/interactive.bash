@@ -329,7 +329,7 @@ int_remove_customer() {
 
 int_transactions() {
    local transactions e CID TID date desc customer name
-   local choice ret_val
+   local choice ret_val IFS
    local -a dialog_args
 
    while true; do
