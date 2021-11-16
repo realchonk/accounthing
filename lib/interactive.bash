@@ -465,7 +465,7 @@ int_show_transaction() {
    text+="Total:        ${total}\n"
 
    dialog --title "Transaction Information" \
-      --msgbox "${text}" 10 40
+      --msgbox "${text}" 12 40
 }
 
 int_remove_transaction() {

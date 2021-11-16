@@ -38,6 +38,7 @@ db_version() {
 set_db_version() {
    echo "Upgraded databases to v$1!" >&2
    echo "$1" > "${versionfile}"
+   git_append_msg "Upgraded databases to $1"
 }
 
 # For testing purposes/template
@@ -45,8 +46,39 @@ upgrade_v0() {
    set_db_version "1"
 }
 
+# Upgrade from v1 to v2.
+# This upgrade replaced the total field with a price.
+upgrade_v1() {
+   local transactions new_trans new_csv csv_entry num price total IFS
+   local TID CID date desc
+
+   csv_read "${tdb_file}" transactions
+   transactions="$(echo "${transactions}" | tr '\n' '=')"
+
+   new_trans=""
+   
+   IFS='='
+   for csv_entry in ${transactions}; do
+      TID="$(echo "${csv_entry}" | cut -d',' -f1)"
+      CID="$(echo "${csv_entry}" | cut -d',' -f2)"
+      date="$(echo "${csv_entry}" | cut -d',' -f3)"
+      num="$(echo "${csv_entry}" | cut -d',' -f4)"
+      total="$(echo "${csv_entry}" | cut -d',' -f5)"
+      desc="$(echo "${csv_entry}" | cut -d',' -f6)"
+      price="$(echo "scale=2; ${total} / ${num}" | bc)"
+
+      new_csv="${TID},${CID},${date},${num},${price},${desc}"
+      new_trans+="${new_csv}="
+   done
+
+   csv_write "${tdb_file}" "$(echo "${new_trans}" | tr '=' '\n')"
+
+   set_db_version "2"
+}
+
 declare -a upgrade_funcs
 upgrade_funcs[0]=upgrade_v0
+upgrade_funcs[1]=upgrade_v1
 
 # Checks the version of this program with the version the databases were created with.
 check_version() {
@@ -57,6 +89,8 @@ check_version() {
       printf "%s" "Would you like to try to upgrade them automatically? " >&2
       read -r resp
       [ "${resp}" = "y" ] || exit 0
+
+      # TODO: add git notice (git decribe --always)
 
       for (( i = ${ver}; i != ${DB_VERSION}; i++ )); do
          if [ "${upgrade_funcs[$ver]}" ]; then
@@ -70,6 +104,6 @@ check_version() {
       # Check again
       check_version
    elif [ "${ver}" -gt "${DB_VERSION}" ]; then
-      error "The databases were created with a newer version of this program, please update to the latest versio."
+      error "The databases were created with a newer version of this program, please update to the latest version."
    fi
 }
