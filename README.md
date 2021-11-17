@@ -88,17 +88,13 @@ If no `year` is provided, the current year is used.
 *Currently there is no option to list transactions of multiple years.*
 
 ### Creating Invoices
-To generate all invoices for a month:
+To generate invoices for all matching transactions:
 ```
-accounthing -ia [month]
+accounthing -i [term]
 ```
-Where `month` is in the following format: `YYYY-MM` (such as `2021-07` for July 2021). If no `month` is provided, the current month is used.
-
-To generate an invoice for a single customer:
-```
-accounthing -i customer month
-```
-Where `customer` can be a name or an ID and `month` is in the following format: `YYYY-MM` (such as `2021-07` for July 2021).
+By default `term` is the current month.
+For more information on which terms are allowed,
+please refer to the [manual](https://stuerz.xyz/generic-accounthing.1.html).
 
 ### Dump Database Contents
 To dump the contents of the customer database:
