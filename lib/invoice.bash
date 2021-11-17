@@ -145,7 +145,7 @@ generate_invoice() {
 }
 
 # Arguments:
-#   $1 - month
+#   $1 - term
 generate_all_invoices() {
    local c outfile tdb
    mkdir -p "${invoice_output_dir}" || exit 1
