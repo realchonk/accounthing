@@ -56,9 +56,11 @@ int_main() {
    local choice ret_val
 
    while true; do
-      open_dialog choice ret_val --menu "Accounthing Main Menu" 12 60 5    \
+      open_dialog choice ret_val                                           \
+         --title "Accounthing" --menu "Accounthing Main Menu" 15 60 5      \
          "Customers"    "Manage the customer database."                    \
          "Transactions" "Manage the transactions database."                \
+         "Git"          "Control the Git repository."                      \
          "Config"       "Edit configuration parameters."                   \
          "Version"      "Show version information."                        \
          "Exit" "Close this program."
@@ -78,6 +80,9 @@ int_main() {
          ;;
       Transactions)
          int_transactions
+         ;;
+      Git)
+         int_git
          ;;
       Config)
          int_config
@@ -117,17 +122,19 @@ int_customers() {
       csv_read "customers" csv_customers
       csv_customers="$(sort <<< "${csv_customers}")"
 
-      IFS="="
-      for e in $(echo "${csv_customers}" | tr '\n' '='); do
-         csv_get "$e" $CUSTOMER_ID CID
-         csv_get "$e" $CUSTOMER_NAME name
-         dialog_args+=("${CID}" "${name}")
-      done
+      if [[ ${csv_customers} ]]; then
+         dialog_args=("---" "--------------")
+         IFS="="
+         for e in $(echo "${csv_customers}" | tr '\n' '='); do
+            csv_get "$e" $CUSTOMER_ID CID
+            csv_get "$e" $CUSTOMER_NAME name
+            dialog_args+=("${CID}" "${name}")
+         done
+      fi
 
       open_dialog choice ret_val --cancel-label "Back"   \
          --menu "Customer Management" 40 40 10           \
          "Add" "Create a new customer."                  \
-         "---" "--------------"                          \
          "${dialog_args[@]}"                             \
          "---" "--------------"                          \
          "Back" "Go back to the main menu."              \
@@ -375,25 +382,27 @@ int_transactions() {
       csv_read "${tdb_file}" transactions
       transactions="$(sort <<< "${transactions}")"
 
-      IFS="="
-      for e in $(echo "${transactions}" | tr '\n' '='); do
-         csv_get "$e" $TRANS_ID TID
-         csv_get "$e" $TRANS_CID CID
-         csv_get "$e" $TRANS_DATE date
-         csv_get "$e" $TRANS_DESC desc
-         cdb_search_by_ID "${CID}" "" customer
-         if [ "${customer}" ]; then
-            csv_get "${customer}" $CUSTOMER_NAME name
-         else
-            name="${CID}"
-         fi
-         dialog_args+=("${TID}" "${name} ${date}: ${desc}")
-      done
+      if [[ ${transactions} ]]; then
+         dialog_args=("---" "------------------------")
+         IFS="="
+         for e in $(echo "${transactions}" | tr '\n' '='); do
+            csv_get "$e" $TRANS_ID TID
+            csv_get "$e" $TRANS_CID CID
+            csv_get "$e" $TRANS_DATE date
+            csv_get "$e" $TRANS_DESC desc
+            cdb_search_by_ID "${CID}" "" customer
+            if [ "${customer}" ]; then
+               csv_get "${customer}" $CUSTOMER_NAME name
+            else
+               name="${CID}"
+            fi
+            dialog_args+=("${TID}" "${name} ${date}: ${desc}")
+         done
+      fi
 
       open_dialog choice ret_val --cancel-label "Back"   \
          --menu "Transaction Management" 40 60 10        \
          "Add" "Create a new transacion."                \
-         "---" "------------------------"                \
          "${dialog_args[@]}"                             \
          "---" "------------------------"                \
          "Back" "Go back to the main menu."              \
@@ -634,10 +643,10 @@ int_edit_transaction() {
 
    csv_append "${tdb_file}" "${csv_entry}"
 
-   if [ "$1" ]; then
-      git_append_msg "Changed Transaction Details for ${TID}"
-   else
+   if echo "$1" | grep -q '^:'; then
       git_append_msg "Added Transaction ${TID}"
+   else
+      git_append_msg "Changed Transaction Details for ${TID}"
    fi
 }
 
@@ -723,4 +732,145 @@ int_config() {
 
    dialog --title "Config" --colors --msgbox "Config saved as \Z4\Zb$(realpath "${conffile}")\Zn" 6 80
 
+}
+
+##################################
+######## GIT INTEGRATION #########
+##################################
+
+int_git() {
+   local ret_val choice commit ref msg
+   local -a commits dialog_args
+
+   while true; do
+      dialog_args=()
+      git_read_commits commits
+      if [[ $? -eq 0 ]]; then
+         for commit in "${commits[@]}"; do
+            ref="$(cut -d',' -f1 <<<"${commit}")"
+            msg="$(cut -d',' -f2 <<<"${commit}")"
+            dialog_args+=("${ref}" "${msg}")
+         done
+      fi
+
+      dialog_args+=("---" "--------------")
+      dialog_args+=("Commit" "Commit all outstanding changes.")
+      dialog_args+=("Back" "Go back to the main menu.")
+      dialog_args+=("Exit" "Close this program.")
+ 
+      open_dialog choice ret_val       \
+         --title "Git Integration"     \
+         --menu "Git Commit" 28 80 25  \
+         "${dialog_args[@]}"
+
+      case "${ret_val}" in
+      $DIALOG_CANCEL)
+         return 0
+         ;;
+      $DIALOG_ESC)
+         return 1
+         ;;
+      esac
+
+      case "${choice}" in
+      ---)
+         continue
+         ;;
+      Commit)
+         git_commit
+         ;;
+      Back)
+         return 0
+         ;;
+      Exit)
+         return 1
+         ;;
+      *)
+         int_manage_commit "${choice}"
+         ;;
+      esac
+      [[ $? -ne 0 ]] && return 1
+   done
+
+}
+
+# Arguments:
+#   $1 - commit hash
+int_manage_commit() {
+   local choice ret_val name tmp
+
+   while true; do
+      open_dialog choice ret_val                            \
+         --title "Manage Commit"                            \
+         --cancel-label "Back"                              \
+         --menu "Commit $1" 10 60 10                        \
+         "Show"   "Display the commit."                     \
+         "Reset"  "Reset the database to this commit."
+      
+      case "${ret_val}" in
+      $DIALOG_CANCEL)
+         return 0
+         ;;
+      $DIALOG_ESC)
+         return 1
+         ;;
+      esac
+
+      case "${choice}" in
+      Show)
+         int_show_commit "$1"
+         ;;
+      Reset)
+         int_reset_commit "$1"
+         ;;
+      esac
+      case "$?" in
+      0)
+         continue
+         ;;
+      1)
+         return 1
+         ;;
+      2)
+         return 0
+         ;;
+      esac
+   done
+}
+
+# Arguments:
+#   $1 - commit hash
+int_show_commit() {
+   local text
+
+   text="$(git_show_message "$1" "Hash: %H%nFrom: %cn <%ce>%nDate: %cr%nMessage: %s%n%b")"
+
+   dialog --title "Commit Information" \
+      --msgbox "${text}" 10 60
+}
+
+# Arguments:
+#   $1 - commit hash
+int_reset_commit() {
+   local text ret_val
+   text+="Do you really want to reset the databases to commit $1?\n"
+   text+="This will irreversibly delete all commits made after it."
+   dialog --title "Reset to commit $1" --yesno "${text}" 7 70
+   ret_val="$?"
+
+   echo "${ret_val}"
+
+   case "${ret_val}" in
+   $DIALOG_OK)
+      git_reset "$1"
+      dialog --title "Reset to commit $1" --msgbox "Databases were reset to commit $1." 5 60
+      return 2
+      ;;
+   $DIALOG_CANCEL)
+      return 0
+      ;;
+   $DIALOG_ESC)
+      return 1
+      ;;
+   esac
 }

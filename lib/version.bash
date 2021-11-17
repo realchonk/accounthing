@@ -30,6 +30,7 @@ db_version() {
    if [ -e "${versionfile}" ]; then
       cat "${versionfile}"
    else
+      mkdir -p "${datadir}"
       echo "${DB_VERSION}" | tee "${versionfile}"
    fi
 }

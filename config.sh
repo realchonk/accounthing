@@ -17,7 +17,7 @@ vendor_taxID="079/123/12347"
 enable_git="true"
 
 # Header of the commit message.
-git_commit_msg="Automatic Update"
+git_commit_header=""
 
 # Path to the git binary. (Leave empty for auto-detection)
 GIT=""

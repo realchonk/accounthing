@@ -22,6 +22,8 @@
 # git_commit_msg is now defined in the config
 git_need_commit=0
 
+git_reset_msg
+
 if [ "${enable_git}" = true ]; then
 
    if [ -z "${GIT}" ]; then
@@ -43,11 +45,38 @@ if [ "${enable_git}" = true ]; then
       "${GIT}" add . || return 1
       echo "${git_commit_msg}" | "${GIT}" commit -qF - || return 1
       popd >/dev/null
+
+      git_reset_msg
+      git_need_commit=0
    }
 
    # Prints the ID of the last commit
    git_get_commit() {
+      pushd "${datadir}" >/dev/null
       git describe --always 2>/dev/null
+      popd >/dev/null
+   }
+
+   # Reads commits into an array
+   # Arguments:
+   #   $1 - out_array
+   git_read_commits() {
+      local log
+      [[ -d ${datadir}/.git ]] || return 1
+      pushd "${datadir}" >/dev/null
+      log="$(git log --format="format:%h,%s")"
+      mapfile -t "$1" <<<"${log}"
+      popd >/dev/null
+   }
+
+   # Get the commit message from a commit.
+   # Arguments:
+   #   $1 - commit hash
+   #   $2 - format string (See: man git-show)
+   git_show_message() {
+      pushd "${datadir}" >/dev/null
+      git show --no-patch --format="format:$2" "$1"
+      popd "${datadir}" >/dev/null
    }
 
 else
@@ -60,6 +89,10 @@ else
       return 1
    }
 
+   git_read_commits() {
+      return 1
+   }  
+
 fi
 
 
@@ -70,4 +103,10 @@ git_append_msg() {
    git_commit_msg="$(printf "%s\n%s" "${git_commit_msg}" "$1")"
    git_need_commit=1
 }
+
+git_reset_msg() {
+   git_commit_msg=""
+   [[ ${git_commit_header} ]] && git_commit_msg="${git_commit_header}\n"
+}
+
 
