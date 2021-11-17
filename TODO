@@ -5,9 +5,7 @@
 - Autoconf-like options (--prefix=PATH) for install.sh
 - Syncing/Pushing to an external Git repository.
 - Add graphical wrapper
-- Merge -i and -ia into a single option.
 
 # Interactive mode
 - Invoice generation
 - Git management
-- Editing the config
