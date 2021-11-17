@@ -1,12 +1,11 @@
 - Make tdb_default_desc a per-customer value
 - Make command-line options intuitive
-- Man page
 - More Error Checking
 - Adjusting the number of decimal points for Unit.
 - Autoconf-like options (--prefix=PATH) for install.sh
 - Syncing/Pushing to an external Git repository.
-- Editing/Removing items could delete the whole database (probably fixed).
 - Add graphical wrapper
+- Merge -i and -ia into a single option.
 
 # Interactive mode
 - Invoice generation

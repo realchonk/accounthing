@@ -1,0 +1,201 @@
+.TH accounthing 1 2021-11-17 accounthing
+
+.SH NAME
+accounthing - accounting software for terminal users
+
+.SH SYNOPSIS
+.SY accounthing
+.OP option
+.OP args\fR...
+.YS
+
+.SH DESCRIPTION
+.I Accounthing
+makes it easy to manage customers and transactions
+and create invoices from it.
+
+.SH OPTIONS
+.B -h
+.RE
+.RS 5
+Print a simple help message to the screen.
+.RE
+.B -I
+.RE
+.RS 5
+Open an interactive text-mode UI session.
+.RE
+.B -ac
+.RE
+.RS 5
+Add a new customer.
+.RE
+.B -lc
+.RE
+.RS 5
+List all customers in a fancy way.
+.RE
+.B -pc
+.RE
+.RS 5
+Dump the (decrypted) customer database.
+.RE
+.B -sc
+.I cterm
+.RE
+.RS 5
+Search for customers either by their
+.I CID
+or by their name,
+.RE
+.B -rc
+.I cterm
+.RE
+.RS 5
+Remove a customer from the database.
+.RE
+.B -at
+.RE
+.RS 5
+Add a new transaction.
+.RE
+.B -atc
+.I CID
+.I date
+.I num
+[\fIprice\fR]
+.I description
+.RE
+.RS 5
+Add a new transaction with the specified parameters.
+.RE
+.B -lt
+[\fIyear\fR]
+.RE
+.RS 5
+List all transactions during the current
+or a specified
+.I year\fR.
+.RE
+.B -pt
+.RE
+.RS 5
+Dump the (decrypted) transaction database.
+.RE
+.B -st
+.I term
+.RE
+.RS 5
+Search for all transactions that match \fIterm\fR.
+.RE
+.B -rt
+.I term
+.RE
+.RS 5
+Remove all transactions that match \fIterm\fR.
+.RE
+
+.SH OPERANDS
+.I CID
+.RE
+.RS 5
+A unique customer ID.
+.RE
+.I TID
+.RE
+.RS 5
+A unique transaction ID.
+.RE
+.I date
+.RE
+.RS 5
+A date in the YYYY-MM-DD format.
+.RE
+.I month
+.RE
+.RS 5
+A month of a year in the YYYY-MM format.
+.RE
+.I year
+.RE
+.RS 5
+A year in the YYYY format.
+.RE
+.I num
+.RE
+.RS 5
+An integer or a decimal with upto two decimal places.
+.RE
+.I price
+.RE
+.RS 5
+Same as \fInum\fR.
+.RE
+.I description
+.RE
+.RS 5
+A short text that shall not contain a comma.
+.RE
+.I term
+.RE
+.RS 5
+A search term for transactions.
+.RE
+.RS 5
+Can be one of:
+.RE 
+.RS 5
+- \fItterm\fR
+.RE
+.RS 5
+- \fItterm\fR:\fIcterm\fR
+.RE
+.RS 5
+- :\fIcterm\fR
+.RE
+.I cterm
+.RE
+.RS 5
+A search term for customers.
+Can either be the
+.I CID
+or the
+.I name
+of the customer.
+.RE
+.I tterm
+.RE
+.RS 5
+The actual search term for transactions.
+.RE
+.RS 5
+Can be one of:
+.RE
+.RS 5
+- \fITID\fR
+.RE
+.RS 5
+- \fIyear\fR-\fITID\fR
+.RE
+.RS 5
+- \fIdate\fR
+.RE
+.RS 5
+- \fImonth\fR
+.RE
+.RS 5
+- \fIyear\fR
+
+.SH EXTENSIONS
+.I Git Integration
+.RE
+.RS 5
+Accounthing has optional \fIgit\fR(1) integration.
+Every time a database is modified,
+the changes are commited to a local repository.
+.RE
+.I GnuPG Encryption
+.RE
+.RS 5
+Databases can be encrypted with \fIgpg\fR(1).
+GPG must be properly set-up to function correctly.

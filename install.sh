@@ -61,12 +61,14 @@ check_dep "dialog" 1
 [ -z "${invoicedir}" ]  && invoicedir="${prefix}/invoice"
 [ -z "${datadir}" ]     && datadir="${prefix}/db"
 [ -z "${conffile}" ]    && conffile="${prefix}/etc/${prog_name}.conf"
+[ -z "${mandir}" ]      && mandir="${prefix}/share/man"
 
 # Install all necessary directories.
 install -vdm755               \
-   "${DESTDIR}${bindir}"     \
-   "${DESTDIR}${libdir}"     \
-   "${DESTDIR}${invoicedir}" \
+   "${DESTDIR}${bindir}"      \
+   "${DESTDIR}${libdir}"      \
+   "${DESTDIR}${invoicedir}"  \
+   "${DESTDIR}${mandir}"      \
    "${DESTDIR}${datadir}"    || exit 1
 
 # Install the program.
@@ -95,3 +97,6 @@ install -vDm644               \
 
 # Install the config file.
 install -vDm644 "config.sh" "${DESTDIR}${conffile}" || exit 1
+
+# Install the man page.
+install -vDm644 "${prog_name}.1" "${DESTDIR}${mandir}/man1/${prog_name}.1" || exit 1
