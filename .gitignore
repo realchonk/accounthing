@@ -4,3 +4,4 @@
 db*
 invoice/next_invoice
 test*
+*.bak

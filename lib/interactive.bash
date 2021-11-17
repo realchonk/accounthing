@@ -720,4 +720,7 @@ int_config() {
       done
       break
    done
+
+   dialog --title "Config" --colors --msgbox "Config saved as \Z4\Zb$(realpath "${conffile}")\Zn" 6 80
+
 }
