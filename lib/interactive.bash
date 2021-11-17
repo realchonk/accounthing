@@ -59,6 +59,7 @@ int_main() {
       open_dialog choice ret_val --menu "Accounthing Main Menu" 12 60 5    \
          "Customers"    "Manage the customer database."                    \
          "Transactions" "Manage the transactions database."                \
+         "Config"       "Edit configuration parameters."                   \
          "Version"      "Show version information."                        \
          "Exit" "Close this program."
 
@@ -77,6 +78,9 @@ int_main() {
          ;;
       Transactions)
          int_transactions
+         ;;
+      Config)
+         int_config
          ;;
       Version)
          int_version
@@ -635,4 +639,85 @@ int_edit_transaction() {
    else
       git_append_msg "Added Transaction ${TID}"
    fi
+}
+
+##################################
+###### CONFIGURATION STUFF #######
+##################################
+
+int_config() {
+   local choice ret_val title name value line lines i file
+   local -a config forms
+
+   title=""
+
+   mapfile -t lines <"${conffile}"
+
+   while true; do
+      forms=()
+      i=0
+      for line in "${lines[@]}"; do
+         if grep -q '^## ' <<<"${line}"; then
+            name="$(sed 's/^## //' <<<"${line}")"
+            #[[ $i != 0 ]] && forms[$i]="\"\" $i 0 \"\" $i 33 0 0" && i=$((i + 1))
+            forms+=("${name}" "$i" 0 "" "$i" 33 0 0)
+         elif grep -q '^# ' <<<"${line}"; then
+            name="$(sed 's/^# //' <<<"${line}")"
+            forms+=("${name}" "$i" 0 "" "$i" 33 0 0)
+         elif grep -q '^[a-zA-Z_]\+=.*$' <<<"${line}"; then
+            name="$(cut -d'=' -f1 <<<"${line}")"
+            value="$(cut -d'=' -f2 <<<"${line}" | sed -e "s/^[\"']//" -e "s/[\"']$//")"
+            forms+=("${name}" "$i" 0 "${value}" "$i" 33 45 45)
+            config+=("${name}=${value}")
+         fi
+         
+
+         i=$((i + 1))
+      done
+
+      open_dialog choice ret_val             \
+         --title "Edit accounthing.conf"     \
+         --form "${title}" 28 80 30          \
+         "${forms[@]}"
+
+      case "${ret_val}" in
+      $DIALOG_CANCEL)
+         return 0
+         ;;
+      $DIALOG_ESC)
+         return 1
+         ;;
+      esac
+
+      i=0
+      while read -r line; do
+         name="$(cut -d'=' -f1 <<<"${config[$i]}")"
+         config[$i]="${name}=\"${line}\""
+         i=$((i + 1))
+      done <<<"${choice}"
+
+
+      for (( i = 0; i < "${#lines[@]}"; i++ )); do
+         line="${lines[$i]}"
+         grep -q '^[a-zA-Z_]\+=.*$' <<<"${line}" || continue
+         name="$(cut -d'=' -f1 <<<"${line}")"
+         for opt in "${config[@]}"; do
+            grep -q "^${name}=" <<<"${opt}" && break
+         done
+         lines[$i]="${opt}"
+      done
+
+      for opt in "${config[@]}"; do
+         name="$(cut -d'=' -f1 <<<"${opt}")"
+         value="$(cut -d'=' -f2 <<<"${opt}" | sed -e "s/^['\"]//" -e "s/['\"]$//")"
+         grep -q '^enable_' <<<"${name}" && ! is_bool "${value}" && { failed=1; title="${name} expects a boolean value"; break; }
+      done
+      [[ ${failed} = 1 ]] && continue
+
+      mv "${conffile}" "${conffile}.bak"
+      for line in "${lines[@]}"; do
+         echo "${line}" >>"${conffile}"
+      done
+      break
+   done
 }

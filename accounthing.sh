@@ -60,7 +60,6 @@ prog="$(basename "$0")"
 # shellcheck source=lib/version.bash
 . "${libdir}/version.bash"
 
-
 [ $# -lt 1 ] && echo "Usage: ${prog} -h" >&2 && exit 1
 
 check_version

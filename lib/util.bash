@@ -74,6 +74,11 @@ is_cost() {
    echo "$1" | grep -q '^[0-9]\+\(\.[0-9]\+\)\?$'
 }
 
+# Checks if $1 is either true or false.
+is_bool() {
+   grep -q '^\(true\|false\)$' <<< "$1"
+}
+
 # Properly increment an ID.
 # Arguments:
 #   $1 - ID
@@ -102,3 +107,5 @@ fi
 calc_total() {
    echo "scale=2; $1 * $2" | bc
 }
+
+
