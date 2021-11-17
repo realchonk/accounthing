@@ -7,7 +7,8 @@ This project was created for a relative of mine,
 therefore everything is made for the German accounting system,
 but you could modify this project to fit your local needs.
 
-Click [here](./invoice_example.pdf) to see an example invoice.
+Click [here](./invoice_example.pdf) to see an example invoice. \
+Click [here](https://stuerz.xyz/generic-accounthing.1.html) to read the online manual.
 
 #### Each customer has the following information:
 - A unique customer ID
