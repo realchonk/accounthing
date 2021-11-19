@@ -22,7 +22,6 @@
 # git_commit_msg is now defined in the config
 git_need_commit=0
 
-git_reset_msg
 
 if [ "${enable_git}" = true ]; then
 
@@ -110,3 +109,4 @@ git_reset_msg() {
 }
 
 
+git_reset_msg
