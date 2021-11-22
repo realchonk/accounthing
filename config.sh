@@ -19,6 +19,9 @@ enable_git="true"
 # Header of the commit message.
 git_commit_header=""
 
+# Automatically push commits to remotes.
+git_autopush="true"
+
 # Path to the git binary. (Leave empty for auto-detection)
 GIT=""
 

@@ -752,9 +752,11 @@ int_git() {
       fi
 
       dialog_args+=("---" "--------------")
-      dialog_args+=("Commit" "Commit all outstanding changes.")
-      dialog_args+=("Back" "Go back to the main menu.")
-      dialog_args+=("Exit" "Close this program.")
+      dialog_args+=("Commit"  "Commit all outstanding changes.")
+      dialog_args+=("Push"    "Push all changes to the remotes.")
+      dialog_args+=("Options" "Configure the Git repo.")
+      dialog_args+=("Back"    "Go back to the main menu.")
+      dialog_args+=("Exit"    "Close this program.")
  
       open_dialog choice ret_val       \
          --title "Git Integration"     \
@@ -776,6 +778,12 @@ int_git() {
          ;;
       Commit)
          git_commit
+         ;;
+      Push)
+         int_git_push
+         ;;
+      Options)
+         int_git_options
          ;;
       Back)
          return 0
@@ -871,4 +879,225 @@ int_reset_commit() {
       return 1
       ;;
    esac
+}
+
+int_git_options() {
+   local choice ret_val
+   while true; do
+      open_dialog choice ret_val                   \
+         --title "Git Integration"                 \
+         --menu "Git Options" 28 80 25             \
+         "Remote" "Add/Remove external repos."     \
+         "Back"   "Go back to the previous menu."  \
+         "Exit"   "Close this program."
+
+      case "${ret_val}" in
+      "$DIALOG_CANCEL")
+         return 0
+         ;;
+      "$DIALOG_ESC")
+         return 1
+         ;;
+      esac
+
+      case "${choice}" in
+      Remote)
+         int_git_remote || return 1
+         ;;
+      Back)
+         return 0
+         ;;
+      Exit)
+         return 1
+         ;;
+      esac
+   done
+}
+
+int_git_remote() {
+   local choice ret_val remote IFS
+   local -A remotes
+   local -a dialog_args
+
+   while true; do
+      dialog_args=()
+      git_get_remotes dialog_args
+
+      dialog_args+=("---" "--------------")
+      dialog_args+=("Add"  "Add an external Git repository.")
+      dialog_args+=("Help" "Help on setting up your own Git server.")
+      dialog_args+=("Back" "Go back to the main menu.")
+      dialog_args+=("Exit" "Close this program.")
+      
+      open_dialog choice ret_val                   \
+         --title "Git Integration"                 \
+         --menu "Git Remotes" 28 80 25             \
+         "${dialog_args[@]}"
+
+      case "${ret_val}" in
+      "$DIALOG_CANCEL")
+         return 0
+         ;;
+      "$DIALOG_ESC")
+         return 1
+         ;;
+      esac
+
+      case "${choice}" in
+      ---)
+         continue
+         ;;
+      Add)
+         int_git_add_repo
+         ;;
+      Help)
+         int_git_help_server || return 1
+         ;;
+      Back)
+         return 0
+         ;;
+      Exit)
+         return 1
+         ;;
+      *)
+         int_git_manage_remote "${choice}" || return 1
+         ;;
+      esac
+   done
+}
+
+int_git_add_repo() {
+   local ret_val name URI msg
+
+   open_dialog name ret_val         \
+      --title     "Add Git Remote"  \
+      --inputbox  "Name" 10 60
+
+   case "${ret_val}" in
+   "$DIALOG_CANCEL")
+      return 0
+      ;;
+   "$DIALOG_ESC")
+      return 1
+      ;;
+   esac
+
+   open_dialog URI ret_val          \
+      --title "Add Git Remote"      \
+      --inputbox "URI" 10 60
+
+   case "${ret_val}" in
+   "$DIALOG_CANCEL")
+      return 0
+      ;;
+   "$DIALOG_ESC")
+      return 1
+      ;;
+   esac
+
+   msg="Failed to add Git Repo:\n$(git_do remote add "${name}" "${URI}" 2>&1)" && msg="Added git remote '${name}'"
+
+   dialog --title "Add Git Remote"  \
+      --msgbox "${msg}" 8 60
+
+   return 0
+}
+
+# Arguments:
+#   $1 - remote
+int_git_show_remote() {
+   local text
+
+   text="$(git_do remote show -n "$1")"
+
+   dialog --title "Git Remote Info" \
+      --msgbox "${text}" 15 80
+}
+
+# Arguments:
+#   $1 - remote
+int_git_manage_remote() {
+   local choice ret_val
+
+   while true; do
+      open_dialog choice ret_val                            \
+         --title "Manage Git Remote"                        \
+         --cancel-label "Back"                              \
+         --menu "$1" 10 60 10                               \
+         "Show"   "Display infomation about the customer."  \
+         "Push"   "Send data to the remote."                \
+         "Remove" "Delete the customer from the database." 
+      
+      case "${ret_val}" in
+      "$DIALOG_CANCEL")
+         return 0
+         ;;
+      "$DIALOG_ESC")
+         return 1
+         ;;
+      esac
+
+      case "${choice}" in
+      Show)
+         int_git_show_remote "$1" || return 1
+         ;;
+      Push)
+         int_git_push "$1"
+         ;;
+      Remove)
+         int_git_remove_remote "$1"
+         case $? in
+         0)
+            return
+            ;;
+         1)
+            return 1
+            ;;
+         2)
+            continue
+            ;;
+         esac
+         ;;
+      esac
+   done
+}
+
+# Arguments:
+#   $1 - remote
+int_git_remove_remote() {
+   dialog --title "Remove Git Remote" \
+      --yesno "Are you sure to remove Git remote '$1'?" \
+      6 60
+
+   case "$?" in
+   "$DIALOG_OK")
+      git_do remote remove "$1"
+      return 0
+      ;;
+   "$DIALOG_CANCEL")
+      return 2
+      ;;
+   "$DIALOG_ESC")
+      return 1
+      ;;
+   esac
+}
+
+int_git_help_server() {
+   xdg-open "https://git-scm.com/book/en/v2/Git-on-the-Server-Setting-Up-the-Server" 2>/dev/null >&2
+}
+
+# Arguments:
+#   $1 - remote
+int_git_push() {
+   local msg
+
+   if [[ $1 ]]; then
+      msg="$(git_push "$1" 2>&1)" && return 0
+   else
+      msg="$(git_push_all 2>&1)" && return 0
+   fi
+
+   dialog --title "Git Push Failed"    \
+      --msgbox "${msg}" 20 60
 }

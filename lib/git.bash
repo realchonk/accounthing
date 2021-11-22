@@ -46,6 +46,8 @@ if [ "${enable_git}" = true ]; then
       echo "${git_commit_msg}" | "${GIT}" commit -qF - || return 1
       popd >/dev/null || return 1
 
+      [[ ${git_autopush} = true ]] && git_push
+
       git_reset_msg
       git_need_commit=0
    }
@@ -76,12 +78,57 @@ if [ "${enable_git}" = true ]; then
    git_show_message() {
       pushd "${datadir}" >/dev/null || return 1
       git show --no-patch --format="format:$2" "$1"
-      popd "${datadir}" >/dev/null || return 1
+      popd >/dev/null || return 1
+   }
+
+   # Run a git command.
+   # Arguments:
+   #   $... - git args
+   git_do() {
+      pushd "${datadir}" >/dev/null || return 1
+      git "$@"
+      popd >/dev/null || return 1
+   }
+
+   # Arguments:
+   #   $1 - out
+   git_get_remotes() {
+      local name URI
+      pushd "${datadir}" >/dev/null || return 1
+      for name in $(git remote); do
+         URI="$(LC_ALL=C git remote show -n "${name}" \
+            | grep 'Fetch URL' \
+            | sed 's/^\s*Fetch\s\+URL\s*:\s*//')"
+         eval "${1}+=('${name}' '${URI}')"
+      done
+      popd >/dev/null || return 1
+   }
+
+   git_push_all() {
+      local remote branch
+      pushd "${datadir}" >/dev/null || return 1
+      branch="$(git branch --show-current)"
+      for remote in $(git remote); do
+         git push "${remote}" "${branch}"
+      done
+      popd >/dev/null || return 1
+   }
+
+   git_push() {
+      local branch
+      pushd "${datadir}" >/dev/null || return 1
+      branch="$(git branch --show-current)"
+      git push "$1" "${branch}"
+      popd >/dev/null || return 1
    }
 
 else
 
    git_commit() {
+      :
+   }
+
+   git_push() {
       :
    }
 
