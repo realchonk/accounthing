@@ -32,6 +32,24 @@ TRANS_NUM=4
 TRANS_PRICE=5
 TRANS_DESC=6
 
+# Construct a CSV entry for a new transaction.
+# Arguments:
+#   $1 - TID
+#   $2 - CID
+#   $3 - Date
+#   $4 - Count
+#   $5 - Price
+#   $6 - Description
+create_transaction() {
+   local TID="$1"
+   local CID="$2"
+   local date="$3"
+   local count="$4"
+   local price="$5"
+   local desc="$6"
+   echo "${TID},${CID},${date},${count},${price},${desc}"
+}
+
 # tdb_default_desc is now defined in the config
 tdb_file="transactions_$(date +%Y)"
 
@@ -114,7 +132,7 @@ tdb_add_direct() {
 
    TID="$(csv_next_ID "${tdb_file}")"
 
-   csv_append "${tdb_file}" "${TID},$1,$2,$3,${price},$5"
+   csv_append "${tdb_file}" "$(create_transaction "${TID}" "$1" "$2" "$3" "${price}" "$5")"
 
    git_append_msg "Added new transaction with ID ${TID}"
 }
@@ -192,7 +210,7 @@ tdb_add_i() {
    tdb_remove "${TID}"
 
    # Update the transaction database
-   csv_append "${tdb_file}" "${TID},${CID},${date},${num},${price},${desc}"
+   csv_append "${tdb_file}" "$(create_transaction "${TID}" "${CID}" "${date}" "${num}" "${price}" "${desc}")"
 
 
    git_append_msg "Added new transaction with ID ${TID}"

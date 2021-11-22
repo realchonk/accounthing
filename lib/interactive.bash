@@ -620,7 +620,7 @@ int_edit_transaction() {
       num="$(echo "${tmp}" | cut -d',' -f4)"
       price="$(echo "${tmp}" | cut -d',' -f5)"
 
-      csv_entry="${TID},${CID},${date},${num},${price},${desc}"
+      csv_entry="$(create_transaction "${TID}" "${CID}" "${date}" "${num}" "${price}" "${desc}")"
 
       is_number "${num}" || { title="Invalid count"; continue; }
       is_cost "${price}" || { title="Invalid price"; continue; }
@@ -631,11 +631,11 @@ int_edit_transaction() {
          csv_get "${tmp}" $CUSTOMER_ID CID
       else
          title="No such customer: ${cname}"
-         csv_entry="${TID},${cname},${date},${num},${price},${desc}"
+         csv_entry="$(create_transaction "${TID}" "${cname}" "${date}" "${num}" "${price}" "${desc}")"
          continue
       fi
 
-      csv_entry="${TID},${CID},${date},${num},${price},${desc}"
+      csv_entry="$(create_transaction "${TID}" "${CID}" "${date}" "${num}" "${price}" "${desc}")"
       break
    done
 

@@ -30,6 +30,22 @@ CUSTOMER_ADDRESS=3
 CUSTOMER_ZIP=4
 CUSTOMER_HOURLY=5
 
+# Construct a CSV entry for a new customer.
+# Arguments:
+#   $1 - CID
+#   $2 - Name
+#   $3 - Address
+#   $4 - ZIP + City
+#   $5 - Hourly Cost
+create_customer() {
+   local CID="$1"
+   local name="$2"
+   local address="$3"
+   local zip="$4"
+   local cost="$5"
+   echo "${CID},${name},${address},${zip},${cost}"
+}
+
 # Search for a customer by name.
 # Arguments:
 #   $1 - name
@@ -186,7 +202,7 @@ cdb_add_i() {
    cdb_remove "${name}"
 
    # Update the customer database
-   csv_append "customers" "${CID},${name},${address},${zip},${cost}"
+   csv_append "customers" "$(create_customer "${CID}" "${name}" "${address}" "${zip}" "${cost}")"
 
    git_append_msg "Added new customer '${name}' (${CID})"
 }
