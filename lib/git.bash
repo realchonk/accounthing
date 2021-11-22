@@ -34,7 +34,8 @@ if [ "${enable_git}" = true ]; then
    git_commit() {
       [ "${git_need_commit}" = 0 ] && return
 
-      pushd "${datadir}" >/dev/null
+      mkdir -p "${datadir}"
+      pushd "${datadir}" >/dev/null || return 1
 
       # If there is no git repo
       if [ ! -d .git ]; then
@@ -43,7 +44,7 @@ if [ "${enable_git}" = true ]; then
 
       "${GIT}" add . || return 1
       echo "${git_commit_msg}" | "${GIT}" commit -qF - || return 1
-      popd >/dev/null
+      popd >/dev/null || return 1
 
       git_reset_msg
       git_need_commit=0
@@ -51,9 +52,9 @@ if [ "${enable_git}" = true ]; then
 
    # Prints the ID of the last commit
    git_get_commit() {
-      pushd "${datadir}" >/dev/null
+      pushd "${datadir}" >/dev/null || return 1
       git describe --always 2>/dev/null
-      popd >/dev/null
+      popd >/dev/null || return 1
    }
 
    # Reads commits into an array
@@ -62,10 +63,10 @@ if [ "${enable_git}" = true ]; then
    git_read_commits() {
       local log
       [[ -d ${datadir}/.git ]] || return 1
-      pushd "${datadir}" >/dev/null
+      pushd "${datadir}" >/dev/null || return 1
       log="$(git log --format="format:%h,%s")"
       mapfile -t "$1" <<<"${log}"
-      popd >/dev/null
+      popd >/dev/null || return 1
    }
 
    # Get the commit message from a commit.
@@ -73,9 +74,9 @@ if [ "${enable_git}" = true ]; then
    #   $1 - commit hash
    #   $2 - format string (See: man git-show)
    git_show_message() {
-      pushd "${datadir}" >/dev/null
+      pushd "${datadir}" >/dev/null || return 1
       git show --no-patch --format="format:$2" "$1"
-      popd "${datadir}" >/dev/null
+      popd "${datadir}" >/dev/null || return 1
    }
 
 else

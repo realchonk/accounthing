@@ -33,11 +33,11 @@ hourrows_temp_file="${invoicedir}/hourrows.tmp"
 invoice_hourrows() {
    local line date num price desc last_desc
    while read -r line; do
-      csv_get "${line}" $TRANS_DESC desc
+      csv_get "${line}" "$TRANS_DESC" desc
       [ "${desc}" != "${last_desc}" ] && printf '\\feetype{%s}\n' "${desc}"
-      date="$(date --date="$(csv_get "${line}" $TRANS_DATE)" +"%x")"
-      csv_get "${line}" $TRANS_NUM num
-      csv_get "${line}" $TRANS_PRICE price
+      date="$(date --date="$(csv_get "${line}" "$TRANS_DATE")" +"%x")"
+      csv_get "${line}" "$TRANS_NUM" num
+      csv_get "${line}" "$TRANS_PRICE" price
       printf '\\hourrow{%s}{%s}{%s}\n' "${date}" "${num}" "${price}"
       last_desc="${desc}"
    done
@@ -54,10 +54,10 @@ invoice_pass1() {
    local IID CID name address zip taxID
 
    IID="$(next_invoice)"
-   csv_get "$1" $CUSTOMER_ID CID
-   csv_get "$1" $CUSTOMER_NAME name
-   csv_get "$1" $CUSTOMER_ADDRESS address
-   csv_get "$1" $CUSTOMER_ZIP zip
+   csv_get "$1" "$CUSTOMER_ID" CID
+   csv_get "$1" "$CUSTOMER_NAME" name
+   csv_get "$1" "$CUSTOMER_ADDRESS" address
+   csv_get "$1" "$CUSTOMER_ZIP" zip
    
    taxID="$(echo "${vendor_taxID}" | sed 's,/,\\\\slash{},g')"
 
@@ -130,13 +130,9 @@ generate_invoice() {
    | invoice_pass2 "${transactions}" \
    >"${invoice_latex_file}"
 
-   pushd "${invoicedir}" >/dev/null
-   log="$(pdflatex "$(basename "${invoice_latex_file}")" </dev/null)"
-   if [ $? -ne 0 ]; then
-      echo "${log}" >&2
-      return 1
-   fi
-   popd >/dev/null
+   pushd "${invoicedir}" >/dev/null || return 1
+   log="$(pdflatex "$(basename "${invoice_latex_file}")" </dev/null)" || { echo "${log}" >&2; return 1; }
+   popd >/dev/null || return 1
 
    rm -f "${invoicedir}/invoice.aux"
    rm -f "${invoicedir}/invoice.log"
@@ -155,8 +151,7 @@ generate_all_invoices() {
 
    for c in ${tdb}; do
       outfile="${invoice_output_dir}/invoice_${c}_$(date +"%Y-%m").pdf"
-      generate_invoice "$c"
-      [ $? -ne 0 ] && echo "${outfile}: Failed" >&2 && return 1
+      generate_invoice "$c" || { echo "${outfile}: Failed" >&2; return 1; }
       mv "invoice.pdf" "${outfile}"
       echo "${outfile}: Done" >&2
    done

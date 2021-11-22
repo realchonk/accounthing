@@ -59,7 +59,7 @@ tdb_file="transactions_$(date +%Y)"
 #   $2 - See: csv_search()
 #   $3 - See: csv_search():$4
 tdb_search() {
-   local year month TID CID
+   local year TID CID
    local p file pattern
    
    if echo "$1" | grep -Fq ':'; then
@@ -125,7 +125,7 @@ tdb_add_direct() {
       is_cost "$4" || error "Invalid Cost: $4"
       price="$4"
    else
-      csv_get "${customer}" $CUSTOMER_HOURLY price
+      csv_get "${customer}" "$CUSTOMER_HOURLY" price
    fi
 
    echo "$5" | grep -qF ',' && error "Description contains a comma"
@@ -154,8 +154,8 @@ tdb_add_i() {
    
    # Find an old transaction if any
    tdb_search "${TID}" "" old
-   cdb_search_by_ID "$(csv_get "${old}" $TRANS_CID)" "" customer
-   csv_get "${customer}" $CUSTOMER_NAME oldname
+   cdb_search_by_ID "$(csv_get "${old}" "$TRANS_CID")" "" customer
+   csv_get "${customer}" "$CUSTOMER_NAME" oldname
 
    # Read the customer ID/name.
    while true; do
@@ -163,7 +163,7 @@ tdb_add_i() {
       if [ -z "${customer}" ]; then
          echo "Invalid Customer" >&2
       else
-         csv_get "${customer}" $CUSTOMER_ID CID
+         csv_get "${customer}" "$CUSTOMER_ID" CID
          break
       fi
    done
@@ -171,7 +171,7 @@ tdb_add_i() {
    # Read the date.
    while true; do
       if [ -n "${old}" ]; then
-         csv_get "${old}" $TRANS_DATE tmp
+         csv_get "${old}" "$TRANS_DATE" tmp
       else
          tmp="$(date +%F)"
       fi
@@ -181,7 +181,7 @@ tdb_add_i() {
    done
 
    # Read the description
-   [ -n "${old}" ] && csv_get "${old}" $TRANS_DESC tmp
+   [ -n "${old}" ] && csv_get "${old}" "$TRANS_DESC" tmp
    [ -z "${desc}" ] && tmp="${tdb_default_desc}"
    while true; do
       desc="$(prompt "Description" "${tmp}")"
@@ -191,13 +191,13 @@ tdb_add_i() {
 
    # Read the number of hours.
    while true; do
-      num="$(prompt "Number of hours/units" "$(csv_get "${old}" $TRANS_NUM)")"
+      num="$(prompt "Number of hours/units" "$(csv_get "${old}" "$TRANS_NUM")")"
       is_number "${num}" && break
       echo "Invalid Number" >&2
    done
 
    # Get the default price.
-   csv_get "${customer}" $CUSTOMER_HOURLY price
+   csv_get "${customer}" "$CUSTOMER_HOURLY" price
    # Read the price per unit.
    while true; do
       price="$(prompt "Price" "${price}")"
@@ -263,20 +263,20 @@ tdb_do_print() {
    local TID CID tmp count price total
    [ -z "$1" ] && return 1
 
-   csv_get "$1" $TRANS_ID TID
-   csv_get "$1" $TRANS_CID CID
-   csv_get "$1" $TRANS_NUM count
-   csv_get "$1" $TRANS_PRICE price
+   csv_get "$1" "$TRANS_ID" TID
+   csv_get "$1" "$TRANS_CID" CID
+   csv_get "$1" "$TRANS_NUM" count
+   csv_get "$1" "$TRANS_PRICE" price
    total="$(calc_total "${count}" "${price}")"
 
    printf '\033[36m============== %s\033[0m\n' "${TID}-$(date +%Y)"
    cdb_search "${CID}" "" tmp
-   printf '| Customer:    %s (%s)\n' "$(csv_get "${tmp}" $CUSTOMER_NAME)" "${CID}"
-   printf '| Date:        %s\n' "$(csv_get "$1" $TRANS_DATE)"
+   printf '| Customer:    %s (%s)\n' "$(csv_get "${tmp}" "$CUSTOMER_NAME")" "${CID}"
+   printf '| Date:        %s\n' "$(csv_get "$1" "$TRANS_DATE")"
    printf '| Count:       %s\n' "${count}"
    printf '| Price:       %s\n' "${price}"
    printf '| Total:       %s\n' "${total}"
-   printf '| Description: %s\n' "$(csv_get "$1" $TRANS_DESC)"
+   printf '| Description: %s\n' "$(csv_get "$1" "$TRANS_DESC")"
    echo
 }
 

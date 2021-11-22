@@ -83,7 +83,8 @@ upgrade_funcs[1]=upgrade_v1
 
 # Checks the version of this program with the version the databases were created with.
 check_version() {
-   local i resp ver="$(db_version)" commit
+   local i resp ver commit
+   ver="$(db_version)"
 
    if [ "${ver}" -lt "${DB_VERSION}" ]; then
       echo "The databases were created with an older version of this program." >&2
@@ -93,7 +94,7 @@ check_version() {
 
       commit="$(git_get_commit)"
 
-      for (( i = ${ver}; i != ${DB_VERSION}; i++ )); do
+      for (( i = ver; i != DB_VERSION; i++ )); do
          if [ "${upgrade_funcs[$ver]}" ]; then
             eval "${upgrade_funcs[$ver]} $((ver + 1))"
          else

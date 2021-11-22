@@ -126,8 +126,8 @@ int_customers() {
          dialog_args=("---" "--------------")
          IFS="="
          for e in $(echo "${csv_customers}" | tr '\n' '='); do
-            csv_get "$e" $CUSTOMER_ID CID
-            csv_get "$e" $CUSTOMER_NAME name
+            csv_get "$e" "$CUSTOMER_ID" CID
+            csv_get "$e" "$CUSTOMER_NAME" name
             dialog_args+=("${CID}" "${name}")
          done
       fi
@@ -141,10 +141,10 @@ int_customers() {
          "Exit" "Close this program."                    \
 
       case "${ret_val}" in
-      $DIALOG_CANCEL)
+      "$DIALOG_CANCEL")
          return 0
          ;;
-      $DIALOG_ESC)
+      "$DIALOG_ESC")
          return 1
          ;;
       esac
@@ -180,8 +180,8 @@ int_select_customer() {
 
    IFS="="
    for e in $(echo "${csv_customers}" | tr '\n' '='); do
-      csv_get "$e" $CUSTOMER_ID CID
-      csv_get "$e" $CUSTOMER_NAME name
+      csv_get "$e" "$CUSTOMER_ID" CID
+      csv_get "$e" "$CUSTOMER_NAME" name
       dialog_args+=("${CID}" "${name}")
    done
 
@@ -190,14 +190,14 @@ int_select_customer() {
       "${dialog_args[@]}"
 
    case "${ret_val}" in
-   $DIALOG_OK)
+   "$DIALOG_OK")
       eval "${1}='${choice}'"
       return 0
       ;;
-   $DIALOG_CANCEL)
+   "$DIALOG_CANCEL")
       return 2
       ;;
-   $DIALOG_ESC)
+   "$DIALOG_ESC")
       return 1
       ;;
    esac
@@ -207,7 +207,7 @@ int_manage_customer() {
    local choice ret_val name tmp
 
    cdb_search_by_ID "$1" "" tmp
-   csv_get "${tmp}" $CUSTOMER_NAME name
+   csv_get "${tmp}" "$CUSTOMER_NAME" name
 
    while true; do
       open_dialog choice ret_val                            \
@@ -219,22 +219,20 @@ int_manage_customer() {
          "Remove" "Delete the customer from the database." 
       
       case "${ret_val}" in
-      $DIALOG_CANCEL)
+      "$DIALOG_CANCEL")
          return 0
          ;;
-      $DIALOG_ESC)
+      "$DIALOG_ESC")
          return 1
          ;;
       esac
 
       case "${choice}" in
       Show)
-         int_show_customer "$1"
-         [ $? -ne 0 ] && return 1
+         int_show_customer "$1" || return 1
          ;;
       Edit)
-         int_edit_customer "$1"
-         [ $? -ne 0 ] && return 1
+         int_edit_customer "$1" || return 1
          ;;
       Remove)
          int_remove_customer "$1"
@@ -258,10 +256,10 @@ int_show_customer() {
    local name address zip rate csv_entry text
    cdb_search_by_ID "$1" "" csv_entry
 
-   csv_get "${csv_entry}" $CUSTOMER_NAME name
-   csv_get "${csv_entry}" $CUSTOMER_ADDRESS address
-   csv_get "${csv_entry}" $CUSTOMER_ZIP zip
-   csv_get "${csv_entry}" $CUSTOMER_HOURLY rate
+   csv_get "${csv_entry}" "$CUSTOMER_NAME" name
+   csv_get "${csv_entry}" "$CUSTOMER_ADDRESS" address
+   csv_get "${csv_entry}" "$CUSTOMER_ZIP" zip
+   csv_get "${csv_entry}" "$CUSTOMER_HOURLY" rate
 
    text=""
    text+="ID:         $1\n"
@@ -281,7 +279,7 @@ int_add_customer() {
 # Arguments
 #   $1 - old CID
 int_edit_customer() {
-   local name address zip rate csv_entry choice ret_val title new_entry CID
+   local name address zip rate csv_entry choice ret_val title CID
 
    if [ "$1" ]; then
       CID="$1"
@@ -292,10 +290,10 @@ int_edit_customer() {
    fi
 
    while true; do
-      csv_get "${csv_entry}" $CUSTOMER_NAME name
-      csv_get "${csv_entry}" $CUSTOMER_ADDRESS address
-      csv_get "${csv_entry}" $CUSTOMER_ZIP zip
-      csv_get "${csv_entry}" $CUSTOMER_HOURLY rate
+      csv_get "${csv_entry}" "$CUSTOMER_NAME" name
+      csv_get "${csv_entry}" "$CUSTOMER_ADDRESS" address
+      csv_get "${csv_entry}" "$CUSTOMER_ZIP" zip
+      csv_get "${csv_entry}" "$CUSTOMER_HOURLY" rate
 
       [ -z "${title}" ] && title="${name}"
 
@@ -309,10 +307,10 @@ int_edit_customer() {
          "Hourly Rate"  5 0 "${rate}"     5 15 30 30
 
       case "${ret_val}" in
-      $DIALOG_CANCEL)
+      "$DIALOG_CANCEL")
          return 0
          ;;
-      $DIALOG_ESC)
+      "$DIALOG_ESC")
          return 1
          ;;
       esac
@@ -325,8 +323,8 @@ int_edit_customer() {
       csv_entry="$(echo "${CID},$(echo "${choice}" | tr '\n' ',' | sed 's/\,$//')")"
 
 
-      is_zip "$(csv_get "${csv_entry}" $CUSTOMER_ZIP)"  || { title="Invalid ZIP"; continue; }
-      is_cost "$(csv_get "${csv_entry}" $CUSTOMER_HOURLY)"  || { title="Invalid Hourly Rate"; continue; }
+      is_zip "$(csv_get "${csv_entry}" "$CUSTOMER_ZIP")"  || { title="Invalid ZIP"; continue; }
+      is_cost "$(csv_get "${csv_entry}" "$CUSTOMER_HOURLY")"  || { title="Invalid Hourly Rate"; continue; }
 
       break
    done
@@ -347,22 +345,22 @@ int_remove_customer() {
    local name csv_entry
 
    cdb_search_by_ID "$1" "" csv_entry
-   csv_get "${csv_entry}" $CUSTOMER_NAME name
+   csv_get "${csv_entry}" "$CUSTOMER_NAME" name
 
    dialog --title "Remove Customer" \
       --yesno "Are you sure to remove customer '${name}'?" \
       6 60
 
    case "$?" in
-   $DIALOG_OK)
+   "$DIALOG_OK")
       cdb_remove "$1"
       git_append_msg "Removed Customer $1"
       return 0
       ;;
-   $DIALOG_CANCEL)
+   "$DIALOG_CANCEL")
       return 2
       ;;
-   $DIALOG_ESC)
+   "$DIALOG_ESC")
       return 1
       ;;
    esac
@@ -386,13 +384,13 @@ int_transactions() {
          dialog_args=("---" "------------------------")
          IFS="="
          for e in $(echo "${transactions}" | tr '\n' '='); do
-            csv_get "$e" $TRANS_ID TID
-            csv_get "$e" $TRANS_CID CID
-            csv_get "$e" $TRANS_DATE date
-            csv_get "$e" $TRANS_DESC desc
+            csv_get "$e" "$TRANS_ID" TID
+            csv_get "$e" "$TRANS_CID" CID
+            csv_get "$e" "$TRANS_DATE" date
+            csv_get "$e" "$TRANS_DESC" desc
             cdb_search_by_ID "${CID}" "" customer
             if [ "${customer}" ]; then
-               csv_get "${customer}" $CUSTOMER_NAME name
+               csv_get "${customer}" "$CUSTOMER_NAME" name
             else
                name="${CID}"
             fi
@@ -409,10 +407,10 @@ int_transactions() {
          "Exit" "Close this program."
 
       case "${ret_val}" in
-      $DIALOG_CANCEL)
+      "$DIALOG_CANCEL")
          return 0
          ;;
-      $DIALOG_ESC)
+      "$DIALOG_ESC")
          return 1
          ;;
       esac
@@ -451,22 +449,20 @@ int_manage_transaction() {
          "Remove" "Delete the transaction from the database." 
       
       case "${ret_val}" in
-      $DIALOG_CANCEL)
+      "$DIALOG_CANCEL")
          return 0
          ;;
-      $DIALOG_ESC)
+      "$DIALOG_ESC")
          return 1
          ;;
       esac
 
       case "${choice}" in
       Show)
-         int_show_transaction "$1"
-         [ $? -ne 0 ] && return 1
+         int_show_transaction "$1" || return 1
          ;;
       Edit)
-         int_edit_transaction "$1"
-         [ $? -ne 0 ] && return 1
+         int_edit_transaction "$1" || return 1
          ;;
       Remove)
          int_remove_transaction "$1"
@@ -490,16 +486,16 @@ int_show_transaction() {
    local trans CID date num price total desc text customer cname
    tdb_search "$1" "" trans
 
-   csv_get "${trans}" $TRANS_CID CID
-   csv_get "${trans}" $TRANS_DATE date
-   csv_get "${trans}" $TRANS_NUM num
-   csv_get "${trans}" $TRANS_PRICE price
-   csv_get "${trans}" $TRANS_DESC desc
+   csv_get "${trans}" "$TRANS_CID" CID
+   csv_get "${trans}" "$TRANS_DATE" date
+   csv_get "${trans}" "$TRANS_NUM" num
+   csv_get "${trans}" "$TRANS_PRICE" price
+   csv_get "${trans}" "$TRANS_DESC" desc
 
    total="$(calc_total "${num}" "${price}")"
 
    cdb_search_by_ID "${CID}" "" customer
-   csv_get "${customer}" $CUSTOMER_NAME cname
+   csv_get "${customer}" "$CUSTOMER_NAME" cname
 
    [ -z "${cname}" ] && cname="(Deleted)"
 
@@ -524,15 +520,15 @@ int_remove_transaction() {
       6 60
 
    case "$?" in
-   $DIALOG_OK)
+   "$DIALOG_OK")
       tdb_remove "$1"
       git_append_msg "Removed Transaction $1"
       return 0
       ;;
-   $DIALOG_CANCEL)
+   "$DIALOG_CANCEL")
       return 2
       ;;
-   $DIALOG_ESC)
+   "$DIALOG_ESC")
       return 1
       ;;
    esac
@@ -556,12 +552,13 @@ int_add_transaction() {
 }
 int_edit_transaction() {
    local TID CID date num desc customer price
-   local csv_entry choice ret_val new_entry cname tmp
+   local csv_entry choice ret_val cname tmp
    if echo "$1" | grep -q '^:'; then
+      #CID="${1//^:/}"
       CID="$(echo "$1" | sed 's/^://')"
       TID="$(csv_next_ID "${tdb_file}")"
       cdb_search_by_ID "${CID}" "" customer
-      csv_get "${customer}" $CUSTOMER_HOURLY price
+      csv_get "${customer}" "$CUSTOMER_HOURLY" price
       csv_entry="${TID},${CID},$(date +%F),,${price},${tdb_default_desc}"
       title="New Transaction"
    else
@@ -570,18 +567,18 @@ int_edit_transaction() {
    fi
 
    while true; do
-      csv_get "${csv_entry}" $TRANS_CID CID
-      csv_get "${csv_entry}" $TRANS_DATE date
-      csv_get "${csv_entry}" $TRANS_NUM num
-      csv_get "${csv_entry}" $TRANS_PRICE price
-      csv_get "${csv_entry}" $TRANS_DESC desc
+      csv_get "${csv_entry}" "$TRANS_CID" CID
+      csv_get "${csv_entry}" "$TRANS_DATE" date
+      csv_get "${csv_entry}" "$TRANS_NUM" num
+      csv_get "${csv_entry}" "$TRANS_PRICE" price
+      csv_get "${csv_entry}" "$TRANS_DESC" desc
 
 
       cdb_search_by_ID "${CID}" "" customer
       if [ "${customer}" ]; then
-         csv_get "${customer}}" $CUSTOMER_NAME cname
+         csv_get "${customer}}" "$CUSTOMER_NAME" cname
          [ -z "${price}" ] && \
-            csv_get "${customer}" $CUSTOMER_HOURLY price
+            csv_get "${customer}" "$CUSTOMER_HOURLY" price
       else
          cname="${CID}"
       fi
@@ -599,10 +596,10 @@ int_edit_transaction() {
          "Price"        6 0 "${price}"       6 15 30 30
 
       case "${ret_val}" in
-      $DIALOG_CANCEL)
+      "$DIALOG_CANCEL")
          return 0
          ;;
-      $DIALOG_ESC)
+      "$DIALOG_ESC")
          return 1
          ;;
       esac
@@ -628,7 +625,7 @@ int_edit_transaction() {
 
       cdb_search "${cname}" "" tmp
       if [ "${tmp}" ]; then
-         csv_get "${tmp}" $CUSTOMER_ID CID
+         csv_get "${tmp}" "$CUSTOMER_ID" CID
       else
          title="No such customer: ${cname}"
          csv_entry="$(create_transaction "${TID}" "${cname}" "${date}" "${num}" "${price}" "${desc}")"
@@ -667,10 +664,12 @@ int_config() {
       i=0
       for line in "${lines[@]}"; do
          if grep -q '^## ' <<<"${line}"; then
+            #name="${line//^## /}"
             name="$(sed 's/^## //' <<<"${line}")"
             #[[ $i != 0 ]] && forms[$i]="\"\" $i 0 \"\" $i 33 0 0" && i=$((i + 1))
             forms+=("${name}" "$i" 0 "" "$i" 33 0 0)
          elif grep -q '^# ' <<<"${line}"; then
+            #name="${line//^# /}"
             name="$(sed 's/^# //' <<<"${line}")"
             forms+=("${name}" "$i" 0 "" "$i" 33 0 0)
          elif grep -q '^[a-zA-Z_]\+=.*$' <<<"${line}"; then
@@ -690,10 +689,10 @@ int_config() {
          "${forms[@]}"
 
       case "${ret_val}" in
-      $DIALOG_CANCEL)
+      "$DIALOG_CANCEL")
          return 0
          ;;
-      $DIALOG_ESC)
+      "$DIALOG_ESC")
          return 1
          ;;
       esac
@@ -744,8 +743,7 @@ int_git() {
 
    while true; do
       dialog_args=()
-      git_read_commits commits
-      if [[ $? -eq 0 ]]; then
+      if git_read_commits commits; then
          for commit in "${commits[@]}"; do
             ref="$(cut -d',' -f1 <<<"${commit}")"
             msg="$(cut -d',' -f2 <<<"${commit}")"
@@ -764,10 +762,10 @@ int_git() {
          "${dialog_args[@]}"
 
       case "${ret_val}" in
-      $DIALOG_CANCEL)
+      "$DIALOG_CANCEL")
          return 0
          ;;
-      $DIALOG_ESC)
+      "$DIALOG_ESC")
          return 1
          ;;
       esac
@@ -808,10 +806,10 @@ int_manage_commit() {
          "Reset"  "Reset the database to this commit."
       
       case "${ret_val}" in
-      $DIALOG_CANCEL)
+      "$DIALOG_CANCEL")
          return 0
          ;;
-      $DIALOG_ESC)
+      "$DIALOG_ESC")
          return 1
          ;;
       esac
@@ -861,15 +859,15 @@ int_reset_commit() {
    echo "${ret_val}"
 
    case "${ret_val}" in
-   $DIALOG_OK)
+   "$DIALOG_OK")
       git_reset "$1"
       dialog --title "Reset to commit $1" --msgbox "Databases were reset to commit $1." 5 60
       return 2
       ;;
-   $DIALOG_CANCEL)
+   "$DIALOG_CANCEL")
       return 0
       ;;
-   $DIALOG_ESC)
+   "$DIALOG_ESC")
       return 1
       ;;
    esac
