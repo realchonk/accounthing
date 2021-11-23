@@ -1,4 +1,4 @@
-# Accounting software for Chads
+# Accounting software for Command-line Power Users
 
 ## Description
 `accounthing.sh` is a command line accounting system that keeps tracks of customer and transactions, with the ability to generate invoices.
