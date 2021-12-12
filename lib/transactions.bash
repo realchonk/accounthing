@@ -50,8 +50,11 @@ create_transaction() {
    echo "${TID},${CID},${date},${count},${price},${desc}"
 }
 
-# tdb_default_desc is now defined in the config
-tdb_file="transactions_$(date +%Y)"
+tdb_year="$(date +%Y)"
+
+tdb_file() {
+   echo "transactions_${tdb_year}"
+}
 
 # Search for one or more transactions.
 # Arguments:
@@ -99,7 +102,7 @@ tdb_search() {
    fi
 
    if [ -z "${year}" ]; then
-      file="${tdb_file}"
+      file="$(tdb_file)"
    else
       file="transactions_${year}"
    fi
@@ -130,9 +133,9 @@ tdb_add_direct() {
 
    echo "$5" | grep -qF ',' && error "Description contains a comma"
 
-   TID="$(csv_next_ID "${tdb_file}")"
+   TID="$(csv_next_ID "$(tdb_file)")"
 
-   csv_append "${tdb_file}" "$(create_transaction "${TID}" "$1" "$2" "$3" "${price}" "$5")"
+   csv_append "$(tdb_file)" "$(create_transaction "${TID}" "$1" "$2" "$3" "${price}" "$5")"
 
    git_append_msg "Added new transaction with ID ${TID}"
 }
@@ -146,7 +149,7 @@ tdb_add_i() {
 
    # Read the transaction ID.
    while true; do
-      csv_next_ID "${tdb_file}" TID
+      csv_next_ID "$(tdb_file)" TID
       TID="$(prompt "Transaction ID" "${TID}")"
       csv_is_ID "${TID}" && break
       echo "Invalid Transaction ID" >&2
@@ -210,7 +213,7 @@ tdb_add_i() {
    tdb_remove "${TID}"
 
    # Update the transaction database
-   csv_append "${tdb_file}" "$(create_transaction "${TID}" "${CID}" "${date}" "${num}" "${price}" "${desc}")"
+   csv_append "$(tdb_file)" "$(create_transaction "${TID}" "${CID}" "${date}" "${num}" "${price}" "${desc}")"
 
 
    git_append_msg "Added new transaction with ID ${TID}"
@@ -284,7 +287,7 @@ tdb_do_print() {
 tdb_list() {
    local file line IFS
    if [ -z "$1" ]; then
-      file="${tdb_file}"
+      file="$(tdb_file)"
    else
       file="transactions_$1"
    fi
@@ -309,5 +312,5 @@ tdb_remove() {
    csv_is_ID "$1" || return 1
    tdb_search "$1" >/dev/null || return 1
    tdb_search "$1" "-v" tmp
-   csv_write "${tdb_file}" "${tmp}"
+   csv_write "$(tdb_file)" "${tmp}"
 }

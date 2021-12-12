@@ -53,7 +53,7 @@ upgrade_v1() {
    local transactions new_trans new_csv csv_entry num price total IFS
    local TID CID date desc
 
-   csv_read "${tdb_file}" transactions
+   csv_read "$(tdb_file)" transactions
    transactions="$(echo "${transactions}" | tr '\n' '=')"
 
    new_trans=""
@@ -72,7 +72,7 @@ upgrade_v1() {
       new_trans+="${new_csv}="
    done
 
-   csv_write "${tdb_file}" "$(echo "${new_trans}" | tr '=' '\n')"
+   csv_write "$(tdb_file)" "$(echo "${new_trans}" | tr '=' '\n')"
 
    set_db_version "$1"
 }

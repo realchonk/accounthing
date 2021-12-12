@@ -377,7 +377,7 @@ int_transactions() {
 
    while true; do
       dialog_args=()
-      csv_read "${tdb_file}" transactions
+      csv_read "$(tdb_file)" transactions
       transactions="$(sort <<< "${transactions}")"
 
       if [[ ${transactions} ]]; then
@@ -556,7 +556,7 @@ int_edit_transaction() {
    if echo "$1" | grep -q '^:'; then
       #CID="${1//^:/}"
       CID="$(echo "$1" | sed 's/^://')"
-      TID="$(csv_next_ID "${tdb_file}")"
+      TID="$(csv_next_ID "$(tdb_file)")"
       cdb_search_by_ID "${CID}" "" customer
       csv_get "${customer}" "$CUSTOMER_HOURLY" price
       csv_entry="${TID},${CID},$(date +%F),,${price},${tdb_default_desc}"
@@ -638,7 +638,7 @@ int_edit_transaction() {
 
    tdb_remove "${TID}"
 
-   csv_append "${tdb_file}" "${csv_entry}"
+   csv_append "$(tdb_file)" "${csv_entry}"
 
    if echo "$1" | grep -q '^:'; then
       git_append_msg "Added Transaction ${TID}"
