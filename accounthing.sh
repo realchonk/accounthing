@@ -100,13 +100,11 @@ case "$1" in
    ret="$?"
    ;;
 -lt)
-   if [ -z "$2" ]; then
-      tdb_list
-      ret="$?"
-   else
-      tdb_list "$2"
-      ret="$?"
+   if [[ $2 ]]; then
+      tdb_year="$2"
    fi
+   tdb_list
+   ret="$?"
    ;;
 -pc)
    csv_read "customers"

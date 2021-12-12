@@ -285,14 +285,8 @@ tdb_do_print() {
 
 # List all transactions.
 tdb_list() {
-   local file line IFS
-   if [ -z "$1" ]; then
-      file="$(tdb_file)"
-   else
-      file="transactions_$1"
-   fi
-   local tdb
-   csv_read "${file}" tdb
+   local line IFS tdb
+   csv_read "$(tdb_file)" tdb
    tdb="$(echo "${tdb}" | tr '\n' '=')"
 
    IFS="="
