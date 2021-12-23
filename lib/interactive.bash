@@ -253,13 +253,14 @@ int_manage_customer() {
 }
 
 int_show_customer() {
-   local name address zip rate csv_entry text
+   local name address zip rate csv_entry text defdesc
    cdb_search_by_ID "$1" "" csv_entry
 
    csv_get "${csv_entry}" "$CUSTOMER_NAME" name
    csv_get "${csv_entry}" "$CUSTOMER_ADDRESS" address
    csv_get "${csv_entry}" "$CUSTOMER_ZIP" zip
    csv_get "${csv_entry}" "$CUSTOMER_HOURLY" rate
+   csv_get "${csv_entry}" "$CUSTOMER_DEFDESC" defdesc
 
    text=""
    text+="ID:         $1\n"
@@ -267,9 +268,10 @@ int_show_customer() {
    text+="Address:    ${address}\n"
    text+="ZIP+City:   ${zip}\n"
    text+="Houry Rate: ${rate}\n"
+   text+="Def. Desc.: ${defdesc}\n"
 
    dialog --title "Customer Information"  \
-      --msgbox "${text}" 10 40
+      --msgbox "${text}" 11 40
 }
 
 int_add_customer() {
@@ -279,7 +281,7 @@ int_add_customer() {
 # Arguments
 #   $1 - old CID
 int_edit_customer() {
-   local name address zip rate csv_entry choice ret_val title CID
+   local name address zip rate csv_entry choice ret_val title CID defdesc
 
    if [ "$1" ]; then
       CID="$1"
@@ -294,17 +296,19 @@ int_edit_customer() {
       csv_get "${csv_entry}" "$CUSTOMER_ADDRESS" address
       csv_get "${csv_entry}" "$CUSTOMER_ZIP" zip
       csv_get "${csv_entry}" "$CUSTOMER_HOURLY" rate
+      csv_get "${csv_entry}" "$CUSTOMER_DEFDESC" defdesc
 
       [ -z "${title}" ] && title="${name}"
 
       open_dialog choice ret_val                      \
          --title "Edit Customer"                      \
-         --form "${title}" 20 60 5                    \
+         --form "${title}" 20 60 6                    \
          "ID"           0 0 "${CID}"      0 15 0  0   \
          "Name"         2 0 "${name}"     2 15 30 30  \
          "Address"      3 0 "${address}"  3 15 30 30  \
          "ZIP+City"     4 0 "${zip}"      4 15 30 30  \
-         "Hourly Rate"  5 0 "${rate}"     5 15 30 30
+         "Hourly Rate"  5 0 "${rate}"     5 15 30 30  \
+         "Def. Descr."  6 0 "${defdesc}"  6 15 30 30
 
       case "${ret_val}" in
       "$DIALOG_CANCEL")
@@ -588,7 +592,7 @@ int_add_transaction() {
    esac
 }
 int_edit_transaction() {
-   local TID CID date num desc customer price
+   local TID CID date num desc customer price defdesc
    local csv_entry choice ret_val cname tmp saved_year
 
 
@@ -598,10 +602,11 @@ int_edit_transaction() {
       TID="$(csv_next_ID "$(tdb_file)")"
       cdb_search_by_ID "${CID}" "" customer
       csv_get "${customer}" "$CUSTOMER_HOURLY" price
+      csv_get "${customer}" "$CUSTOMER_DEFDESC" defdesc
       if [[ ${tdb_year} = $(date +%Y) ]]; then
          date="$(date +%F)"
       fi
-      csv_entry="${TID},${CID},${date},,${price},${tdb_default_desc}"
+      csv_entry="$(create_transaction "${TID}" "${CID}" "${date}" "" "${price}" "${defdesc}")"
       title="New Transaction"
    else
       TID="$1"

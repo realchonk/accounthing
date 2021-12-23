@@ -29,6 +29,7 @@ CUSTOMER_NAME=2
 CUSTOMER_ADDRESS=3
 CUSTOMER_ZIP=4
 CUSTOMER_HOURLY=5
+CUSTOMER_DEFDESC=6
 
 # Construct a CSV entry for a new customer.
 # Arguments:
@@ -37,13 +38,15 @@ CUSTOMER_HOURLY=5
 #   $3 - Address
 #   $4 - ZIP + City
 #   $5 - Hourly Cost
+#   $6 - Default Description
 create_customer() {
    local CID="$1"
    local name="$2"
    local address="$3"
    local zip="$4"
    local cost="$5"
-   echo "${CID},${name},${address},${zip},${cost}"
+   local defdesc="$6"
+   echo "${CID},${name},${address},${zip},${cost},${defdesc}"
 }
 
 # Search for a customer by name.
@@ -109,6 +112,7 @@ cdb_do_print() {
    printf "| Address:     %s\n" "$(csv_get "$1" $CUSTOMER_ADDRESS)"
    printf "|              %s\n" "$(csv_get "$1" $CUSTOMER_ZIP)"
    printf "| Hourly:      %s\n" "$(csv_get "$1" $CUSTOMER_HOURLY)"
+   printf "| Def. Descr.: %s\n" "$(csv_get "$1" $CUSTOMER_DEFDESC)"
    echo
 }
 
@@ -158,7 +162,7 @@ cdb_calc_total() {
 #   0 - OK
 #   1 - Failed
 cdb_add_i() {
-   local CID name address zip cost old
+   local CID name address zip cost old defdesc
    echo "Adding a new customer." >&2
 
 
@@ -195,6 +199,9 @@ cdb_add_i() {
       echo "Invalid Cost" >&2
    done
 
+   # Read the default description for transactions for the new customer.
+   defdesc="$(prompt "Default Transaction Description" "$(csv_get "${old}" "$CUSTOMER_DEFDESC")")"
+
    # Remove customers that have the same ID as the new one, if any.
    cdb_remove "${CID}"
 
@@ -202,7 +209,7 @@ cdb_add_i() {
    cdb_remove "${name}"
 
    # Update the customer database
-   csv_append "customers" "$(create_customer "${CID}" "${name}" "${address}" "${zip}" "${cost}")"
+   csv_append "customers" "$(create_customer "${CID}" "${name}" "${address}" "${zip}" "${cost}" "${defdesc}")"
 
    git_append_msg "Added new customer '${name}' (${CID})"
 }

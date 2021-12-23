@@ -19,7 +19,7 @@
 
 # !!! IMPORTANT !!!
 # Increment this version number if you change the layout of the databases.
-DB_VERSION=2
+DB_VERSION=3
 
 versionfile="${datadir}/version"
 
@@ -77,9 +77,36 @@ upgrade_v1() {
    set_db_version "$1"
 }
 
+# Upgrade from v2 to v3.
+# This upgrade adds the per-customer default description.
+upgrade_v2() {
+   local customers new_customers IFS customer new_customer
+   local CID name address zip hourly
+
+   csv_read "customers" customers
+   customers="$(tr '\n' '=' <<<"${customers}")"
+
+   new_customers=""
+   IFS="="
+   for customer in ${customers}; do
+      CID="$(cut -d',' -f1 <<<"${customer}")"
+      name="$(cut -d',' -f2 <<<"${customer}")"
+      address="$(cut -d',' -f3 <<<"${customer}")"
+      zip="$(cut -d',' -f4 <<<"${customer}")"
+      hourly="$(cut -d',' -f5 <<<"${customer}")"
+
+      new_customer="${CID},${name},${address},${zip},${hourly},${tdb_default_desc}"
+      new_customers+="${new_customer}="
+   done
+
+   csv_write "customers" "$(tr '=' '\n' <<<"${new_customers}")"
+   set_db_version "$1"
+}
+
 declare -a upgrade_funcs
 upgrade_funcs[0]=upgrade_v0
 upgrade_funcs[1]=upgrade_v1
+upgrade_funcs[2]=upgrade_v2
 
 # Checks the version of this program with the version the databases were created with.
 check_version() {

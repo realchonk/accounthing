@@ -185,7 +185,7 @@ tdb_add_i() {
 
    # Read the description
    [ -n "${old}" ] && csv_get "${old}" "$TRANS_DESC" tmp
-   [ -z "${desc}" ] && tmp="${tdb_default_desc}"
+   [ -z "${desc}" ] && csv_get "${customer}" "$CUSTOMER_DEFDESC" tmp
    while true; do
       desc="$(prompt "Description" "${tmp}")"
       echo "${desc}" | grep -qF ',' || break

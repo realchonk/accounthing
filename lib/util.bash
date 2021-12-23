@@ -86,7 +86,6 @@ is_bool() {
 increment_ID() {
    local ID="$1"
    ID="${ID//0/}"
-   echo "${ID}" >debug
    printf "%0*d" "$2" "$((ID + 1))"
 }
 
