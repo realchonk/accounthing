@@ -40,6 +40,7 @@ set_db_version() {
    echo "Upgraded databases to v$1!" >&2
    echo "$1" > "${versionfile}"
    git_append_msg "Upgraded databases to $1"
+   git_commit
 }
 
 # For testing purposes/template
