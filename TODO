@@ -1,4 +1,3 @@
-- Make tdb_default_desc a per-customer value
 - Make command-line options intuitive
 - More Error Checking
 - Adjusting the number of decimal points for Unit.
@@ -8,4 +7,3 @@
 
 # Interactive mode
 - Invoice generation
-- Make a menu to select the year for transactions
