@@ -400,11 +400,12 @@ int_transactions() {
 
       open_dialog choice ret_val --cancel-label "Back"   \
          --menu "Transaction Management" 40 60 10        \
-         "Add" "Create a new transacion."                \
+         "Add"    "Create a new transacion."             \
+         "Year"   "Select a different year."             \
          "${dialog_args[@]}"                             \
-         "---" "------------------------"                \
-         "Back" "Go back to the main menu."              \
-         "Exit" "Close this program."
+         "---"    "------------------------"             \
+         "Back"   "Go back to the main menu."            \
+         "Exit"   "Close this program."
 
       case "${ret_val}" in
       "$DIALOG_CANCEL")
@@ -418,6 +419,9 @@ int_transactions() {
       case "${choice}" in
       Add)
          int_add_transaction
+         ;;
+      Year)
+         int_select_year
          ;;
       ---)
          continue
@@ -433,6 +437,39 @@ int_transactions() {
          ;;
       esac
       [ $? != 0 ] && return 1
+   done
+}
+
+int_select_year() {
+   local years choice ret_val y IFS
+   local -a dialog_args
+
+   while true; do
+      years="$(ls "${datadir}" | grep '^transactions_\([0-9]\{4\}\)\.csv\(\.gpg\)\?$' | sed 's/^[^0-9]\+\([0-9]\+\).*$/\1/' | sort -nr)"
+
+
+      dialog_args=()
+      unset IFS
+      for y in ${years}; do
+         dialog_args+=("${y}" "Select year ${y}.")
+      done
+
+      open_dialog choice ret_val          \
+         --title "Select Year"            \
+         --menu "Select Year" 20 60 20    \
+         "${dialog_args[@]}"
+
+      case "${ret_val}" in
+      "$DIALOG_CANCEL")
+         return 0
+         ;;
+      "$DIALOG_ESC")
+         return 1
+         ;;
+      esac
+
+      tdb_year="${choice}"
+      return 0
    done
 }
 
@@ -552,14 +589,19 @@ int_add_transaction() {
 }
 int_edit_transaction() {
    local TID CID date num desc customer price
-   local csv_entry choice ret_val cname tmp
+   local csv_entry choice ret_val cname tmp saved_year
+
+
    if echo "$1" | grep -q '^:'; then
       #CID="${1//^:/}"
       CID="$(echo "$1" | sed 's/^://')"
       TID="$(csv_next_ID "$(tdb_file)")"
       cdb_search_by_ID "${CID}" "" customer
       csv_get "${customer}" "$CUSTOMER_HOURLY" price
-      csv_entry="${TID},${CID},$(date +%F),,${price},${tdb_default_desc}"
+      if [[ ${tdb_year} = $(date +%Y) ]]; then
+         date="$(date +%F)"
+      fi
+      csv_entry="${TID},${CID},${date},,${price},${tdb_default_desc}"
       title="New Transaction"
    else
       TID="$1"
@@ -638,7 +680,10 @@ int_edit_transaction() {
 
    tdb_remove "${TID}"
 
+   saved_year="${tdb_year}"
+   tdb_year="$(cut -d'-' -f1 <<<"${date}")"
    csv_append "$(tdb_file)" "${csv_entry}"
+   tdb_year="${saved_year}"
 
    if echo "$1" | grep -q '^:'; then
       git_append_msg "Added Transaction ${TID}"
