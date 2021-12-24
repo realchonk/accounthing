@@ -308,3 +308,10 @@ tdb_remove() {
    tdb_search "$1" "-v" tmp
    csv_write "$(tdb_file)" "${tmp}"
 }
+
+tdb_years() {
+   ls "${datadir}"                                             \
+      | grep '^transactions_\([0-9]\{4\}\)\.csv\(\.gpg\)\?$'   \
+      | sed 's/^[^0-9]\+\([0-9]\+\).*$/\1/'                    \
+      | sort -nr
+}

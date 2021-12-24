@@ -142,9 +142,11 @@ generate_invoice() {
 
 # Arguments:
 #   $1 - term
+#   $2 - output
 generate_all_invoices() {
-   local c outfile tdb
+   local c outfile tdb output
    mkdir -p "${invoice_output_dir}" || exit 1
+   output=""
 
    tdb_search "$1" "" tdb
    tdb="$(echo "${tdb}" | cut -d',' -f2 | sort | uniq)"
@@ -153,7 +155,9 @@ generate_all_invoices() {
       outfile="${invoice_output_dir}/invoice_${c}_$(date +"%Y-%m").pdf"
       generate_invoice "$c" || { echo "${outfile}: Failed" >&2; return 1; }
       mv "invoice.pdf" "${outfile}"
-      echo "${outfile}: Done" >&2
+      output+="${outfile}: Done\n"
+      output="$(printf "%s%s: Done\n" "${output}" "${outfile}")"
    done
+   [ ${#2} -ne 0 ] && eval "${2}='${output}'" || echo "${output}" >&2
 }
 

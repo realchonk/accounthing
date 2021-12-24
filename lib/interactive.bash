@@ -18,6 +18,7 @@
 # Interactive mode
 # External Dependencies:
 # - dialog
+# - zenity
 
 # References:
 # https://linuxcommand.org/lc3_adv_dialog.php
@@ -60,6 +61,7 @@ int_main() {
          --title "Accounthing" --menu "Accounthing Main Menu" 15 60 5      \
          "Customers"    "Manage the customer database."                    \
          "Transactions" "Manage the transactions database."                \
+         "Invoice"      "Create invoies."                                  \
          "Git"          "Control the Git repository."                      \
          "Config"       "Edit configuration parameters."                   \
          "Version"      "Show version information."                        \
@@ -80,6 +82,9 @@ int_main() {
          ;;
       Transactions)
          int_transactions
+         ;;
+      Invoice)
+         int_invoice
          ;;
       Git)
          int_git
@@ -170,37 +175,53 @@ int_customers() {
    done
 }
 
+# Args:
+#   $1 - output
+#   $2 - 'all' if all can be selected
 int_select_customer() {
    local IFS e dialog_args csv_customers
    local CID name choice ret_val
 
-   dialog_args=()
-   csv_read "customers" csv_customers
-   csv_customers="$(sort <<< "${csv_customers}")"
+   while true; do
+      dialog_args=()
+      csv_read "customers" csv_customers
+      csv_customers="$(sort <<< "${csv_customers}")"
 
-   IFS="="
-   for e in $(echo "${csv_customers}" | tr '\n' '='); do
-      csv_get "$e" "$CUSTOMER_ID" CID
-      csv_get "$e" "$CUSTOMER_NAME" name
-      dialog_args+=("${CID}" "${name}")
-   done
+      if [[ $2 = all ]]; then
+         dialog_args+=("All" "Select all customers.")
+         dialog_args+=("---" "--------------")
+      fi
 
-   open_dialog choice ret_val             \
-      --menu "Select Customer" 40 40 10   \
-      "${dialog_args[@]}"
+      IFS="="
+      for e in $(echo "${csv_customers}" | tr '\n' '='); do
+         csv_get "$e" "$CUSTOMER_ID" CID
+         csv_get "$e" "$CUSTOMER_NAME" name
+         dialog_args+=("${CID}" "${name}")
+      done
 
-   case "${ret_val}" in
-   "$DIALOG_OK")
+      open_dialog choice ret_val             \
+         --menu "Select Customer" 40 40 10   \
+         "${dialog_args[@]}"
+
+      case "${ret_val}" in
+      "$DIALOG_CANCEL")
+         return 2
+         ;;
+      "$DIALOG_ESC")
+         return 1
+         ;;
+      esac
+      case "${choice}" in
+      ---)
+         continue
+         ;;
+      All)
+         choice=""
+         ;;
+      esac
       eval "${1}='${choice}'"
       return 0
-      ;;
-   "$DIALOG_CANCEL")
-      return 2
-      ;;
-   "$DIALOG_ESC")
-      return 1
-      ;;
-   esac
+   done
 }
 
 int_manage_customer() {
@@ -449,8 +470,7 @@ int_select_year() {
    local -a dialog_args
 
    while true; do
-      years="$(ls "${datadir}" | grep '^transactions_\([0-9]\{4\}\)\.csv\(\.gpg\)\?$' | sed 's/^[^0-9]\+\([0-9]\+\).*$/\1/' | sort -nr)"
-
+      years="$(tdb_years)"
 
       dialog_args=()
       unset IFS
@@ -781,6 +801,137 @@ int_config() {
 
    dialog --title "Config" --colors --msgbox "Config saved as \Z4\Zb$(realpath "${conffile}")\Zn" 6 80
 
+}
+
+##################################
+###### INVOICE GENERATION ########
+##################################
+
+int_select_month() {
+   local ret_val choice m transactions
+   local -a dialog_args
+
+   while true; do
+      dialog_args=()
+      dialog_args+=("Year" "Select a different year")
+      dialog_args+=("---" "--------------")
+
+      for m in {1..12}; do
+         m="$(printf "%02d" "${m}")"
+         tdb_search "${tdb_year}-${m}" "" transactions
+         [[ ${transactions} ]] && \
+            dialog_args+=("${m}" "Select the month of ${tdb_year}-${m}")
+         
+      done
+
+      dialog_args+=("---" "--------------")
+      dialog_args+=("Back" "Go back to the main menu.")
+      dialog_args+=("Exit" "Close this program.")
+
+      open_dialog choice ret_val          \
+         --title "$1"                     \
+         --menu "Select month" 40 40 10   \
+         "${dialog_args[@]}"
+
+      case "${ret_val}" in
+      "$DIALOG_CANCEL")
+         return 2
+         ;;
+      "$DIALOG_ESC")
+         return 1
+         ;;
+      esac
+
+
+      case "${choice}" in
+      ---)
+         continue
+         ;;
+      Year)
+         int_select_year
+         continue
+         ;;
+      Back)
+         return 2
+         ;;
+      Exit)
+         return 1
+         ;;
+      *)
+         eval "${2}='${choice}'"
+         return 0
+         ;;
+      esac
+   done
+}
+
+#int_select_directory() {
+#   local ret_val choice d
+#
+#   d="$3"
+#   while true; do
+#      open_dialog choice ret_val       \
+#         --title "$1"                  \
+#         --extra-button                \
+#         --extra-label "Select"        \
+#         --dselect "${d}/" 40 80
+#
+#      #d="${d}/${choice}"
+#      d="${choice}"
+#
+#      case "${ret_val}" in
+#      "$DIALOG_OK")
+#         continue
+#         ;;
+#      "$DIALOG_CANCEL")
+#         return 2
+#         ;;
+#      "$DIALOG_ESC")
+#         return 1
+#         ;;
+#      "$DIALOG_EXTRA")
+#         eval "${2}='${d}'"
+#         return 0
+#         ;;
+#      esac
+#   done
+#}
+
+int_invoice() {
+   local customer_ID month log
+
+   while true; do
+      int_select_customer customer_ID all
+      case "$?" in
+      1)
+         return 1
+         ;;
+      2)
+         return 0
+         ;;
+      esac
+      
+      int_select_month "Generate Invoice" month
+      case "$?" in
+      1)
+         return 1
+         ;;
+      2)
+         return 0
+         ;;
+      esac
+
+      #int_select_directory "Generate Invoice" directory "${invoice_output_dir}"
+      invoice_output_dir="$(zenity --file-selection --directory)" || return 0
+      
+      generate_all_invoices "${tdb_year}-${month}:${customer_ID}" log
+
+      dialog --title "Invoice Generation"                            \
+         --msgbox "$(wc -l <<<"${log}") Invoice(s) written to '${invoice_output_dir}'." \
+         6 60
+
+      return 0
+   done
 }
 
 ##################################
