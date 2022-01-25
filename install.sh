@@ -39,6 +39,13 @@ check_dep() {
    fi
 }
 
+# Args:
+#   $1 - src
+#   $2 - dest
+install_norep() {
+   [ -f "$2" ] || install -vDm644 "$1" "$2"
+}
+
 # Check if which is installed
 which which >/dev/null 2>&1
 if [ $? -eq 127 ]; then
@@ -90,14 +97,12 @@ sed -i                                                      \
 install -vDm644 ./lib/* "${DESTDIR}${libdir}" || exit 1
 
 # Install the template invoice.
-install -vDm644               \
-   "invoice/template.tex"     \
-   "invoice/invoice.cls"      \
-   "invoice/Logo.png"         \
-   "${DESTDIR}${invoicedir}" || exit 1
+install_norep "invoice/template.tex"   "${DESTDIR}${invoicedir}/template.tex"
+install_norep "invoice/invoice.cls"    "${DESTDIR}${invoicedir}/invoice.cls"
+install_norep "invoice/Logo.png"       "${DESTDIR}${invoicedir}/Logo.png"
 
 # Install the config file.
-[ -f "${DESTDIR}${conffile}" ] || install -vDm644 "config.sh" "${DESTDIR}${conffile}" || exit 1
+install_norep "config.sh"              "${DESTDIR}${conffile}"
 
 # Install the man page.
 install -vDm644 "${prog_name}.1" "${DESTDIR}${mandir}/man1/${prog_name}.1" || exit 1
