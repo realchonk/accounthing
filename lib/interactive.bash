@@ -656,11 +656,11 @@ int_edit_transaction() {
          --title "Edit Transaction"                      \
          --form "${title}" 20 60 7                       \
          "ID"           0 0 "${TID}"         0 15 0  0   \
-         "Customer"     2 0 "${cname}"       2 15 30 30  \
-         "Description"  3 0 "${desc}"        3 15 30 30  \
-         "Date"         4 0 "${date}"        4 15 30 30  \
-         "Count"        5 0 "${num}"         5 15 30 30  \
-         "Price"        6 0 "${price}"       6 15 30 30
+         "Customer"     2 0 "${cname}"       2 15 38 60  \
+         "Description"  3 0 "${desc}"        3 15 38 60  \
+         "Date"         4 0 "${date}"        4 15 38 60  \
+         "Count"        5 0 "${num}"         5 15 38 60  \
+         "Price"        6 0 "${price}"       6 15 38 60
 
       case "${ret_val}" in
       "$DIALOG_CANCEL")
