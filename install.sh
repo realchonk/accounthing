@@ -97,7 +97,7 @@ install -vDm644               \
    "${DESTDIR}${invoicedir}" || exit 1
 
 # Install the config file.
-install -vDm644 "config.sh" "${DESTDIR}${conffile}" || exit 1
+[ -f "${DESTDIR}${conffile}" ] || install -vDm644 "config.sh" "${DESTDIR}${conffile}" || exit 1
 
 # Install the man page.
 install -vDm644 "${prog_name}.1" "${DESTDIR}${mandir}/man1/${prog_name}.1" || exit 1

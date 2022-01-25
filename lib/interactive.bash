@@ -325,11 +325,11 @@ int_edit_customer() {
          --title "Edit Customer"                      \
          --form "${title}" 20 60 6                    \
          "ID"           0 0 "${CID}"      0 15 0  0   \
-         "Name"         2 0 "${name}"     2 15 30 30  \
-         "Address"      3 0 "${address}"  3 15 30 30  \
-         "ZIP+City"     4 0 "${zip}"      4 15 30 30  \
-         "Hourly Rate"  5 0 "${rate}"     5 15 30 30  \
-         "Def. Descr."  6 0 "${defdesc}"  6 15 30 30
+         "Name"         2 0 "${name}"     2 15 38 60  \
+         "Address"      3 0 "${address}"  3 15 38 60  \
+         "ZIP+City"     4 0 "${zip}"      4 15 38 60  \
+         "Hourly Rate"  5 0 "${rate}"     5 15 38 60  \
+         "Def. Descr."  6 0 "${defdesc}"  6 15 38 60
 
       case "${ret_val}" in
       "$DIALOG_CANCEL")
