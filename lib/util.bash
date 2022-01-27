@@ -84,8 +84,8 @@ is_bool() {
 #   $1 - ID
 #   $2 - length
 increment_ID() {
-   local ID="$1"
-   ID="${ID//0/}"
+   local ID
+   ID="$(sed 's/^0*//' "$1")"
    printf "%0*d" "$2" "$((ID + 1))"
 }
 
