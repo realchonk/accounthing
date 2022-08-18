@@ -56,6 +56,7 @@ fi
 # Check for other dependencies
 check_dep "bash"
 check_dep "pdflatex"
+check_dep "bc"
 check_dep "gpg" 1
 check_dep "git" 1
 check_dep "dialog" 1
